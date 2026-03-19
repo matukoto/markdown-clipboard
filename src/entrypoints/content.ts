@@ -37,16 +37,22 @@ async function handleClipPageRequest(): Promise<ClipResponse> {
 export default defineContentScript({
   matches: ["http://*/*", "https://*/*"],
   main() {
-    browser.runtime.onMessage.addListener((message: unknown) => {
-      if (!isClipPageRequest(message)) {
-        return undefined;
-      }
+    browser.runtime.onMessage.addListener(
+      (message: unknown, _sender, sendResponse) => {
+        if (!isClipPageRequest(message)) {
+          return undefined;
+        }
 
-      if (message.type !== CLIP_PAGE_MESSAGE) {
-        return undefined;
-      }
+        if (message.type !== CLIP_PAGE_MESSAGE) {
+          return undefined;
+        }
 
-      return handleClipPageRequest();
-    });
+        void handleClipPageRequest().then((response) => {
+          sendResponse(response);
+        });
+
+        return true;
+      }
+    );
   },
 });
