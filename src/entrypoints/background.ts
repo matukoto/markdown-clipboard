@@ -33,14 +33,14 @@ async function clipActiveTab(): Promise<ClipResponse> {
     })) as ClipResponse;
 
     if (response.success) {
-      await setBadge("OK", "#16a34a");
+      await setBadge("✓", "#16a34a");
       return response;
     }
 
-    await setBadge("ERR", "#dc2626");
+    await setBadge("✕", "#dc2626");
     return response;
   } catch (error) {
-    await setBadge("ERR", "#dc2626");
+    await setBadge("✕", "#dc2626");
 
     return {
       success: false,
