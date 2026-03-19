@@ -89,6 +89,33 @@ describe("extractReadableContent の振る舞い", () => {
     expect(result.contentHtml).not.toContain("<img");
   });
 
+  it("リンクを外しても内部の装飾要素は保持する", () => {
+    document.title = "Markdown Web Clipper";
+    document.body.innerHTML = `
+      <main>
+        <article>
+          <h1>Markdown Web Clipper</h1>
+          <p>
+            Read the
+            <a href="/docs"><strong>documentation</strong></a>
+            and run
+            <a href="/cli"><code>mdclip</code></a>.
+          </p>
+        </article>
+      </main>
+    `;
+
+    const result = extractReadableContent(
+      document,
+      "https://example.com/posts/clipper",
+      DEFAULT_CLIP_CONTENT_OPTIONS
+    );
+
+    expect(result.contentHtml).toContain("<strong>documentation</strong>");
+    expect(result.contentHtml).toContain("<code>mdclip</code>");
+    expect(result.contentHtml).not.toContain("<a ");
+  });
+
   it("Readability が本文を見つけられないときは空を返す", () => {
     document.title = "Empty";
     document.body.innerHTML = "<main><article></article></main>";

@@ -60,13 +60,13 @@ function postProcessExtractedContent(
 
     if (href === null || href === "") {
       if (!options.includeLinks) {
-        anchor.replaceWith(anchor.textContent ?? "");
+        unwrapElement(anchor);
       }
       return;
     }
 
     if (!options.includeLinks) {
-      anchor.replaceWith(anchor.textContent ?? "");
+      unwrapElement(anchor);
       return;
     }
 
@@ -92,6 +92,10 @@ function postProcessExtractedContent(
   root.querySelectorAll("script, style, noscript").forEach((element) => {
     element.remove();
   });
+}
+
+function unwrapElement(element: Element): void {
+  element.replaceWith(...Array.from(element.childNodes));
 }
 
 function setBaseUrl(document: Document, baseUrl: string): void {
