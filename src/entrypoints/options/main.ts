@@ -5,7 +5,7 @@ import "./app.css";
 const target = document.getElementById("app");
 
 if (target === null) {
-  throw new Error("Popup root element was not found.");
+  throw new Error("Options root element was not found.");
 }
 
 const app = mount(App, {
