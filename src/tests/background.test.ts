@@ -9,6 +9,7 @@ import {
 type RuntimeMessageListener = (message: unknown) => unknown;
 type CommandListener = (command: string) => void;
 type ActionClickListener = () => void;
+type ClipMessageResponse = ClipResponse | undefined;
 
 describe("background entrypoint", () => {
   let runtimeMessageListener: RuntimeMessageListener | undefined;
@@ -18,7 +19,7 @@ describe("background entrypoint", () => {
   const setBadgeBackgroundColor = vi.fn(async () => undefined);
   const setBadgeText = vi.fn(async () => undefined);
   const tabsQuery = vi.fn(async () => [{ id: 123 }]);
-  const tabsSendMessage = vi.fn(async (): Promise<ClipResponse> => {
+  const tabsSendMessage = vi.fn(async (): Promise<ClipMessageResponse> => {
     return {
       success: true,
       result: {
@@ -174,6 +175,25 @@ describe("background entrypoint", () => {
     expect(response).toEqual({
       success: false,
       error: "Cannot establish connection. Receiving end does not exist.",
+    });
+    expect(setBadgeBackgroundColor).toHaveBeenCalledWith({ color: "#dc2626" });
+    expect(setBadgeText).toHaveBeenCalledWith({ text: "✕" });
+  });
+
+  it("content script から応答がない場合は失敗レスポンスへ丸める", async () => {
+    if (runtimeMessageListener === undefined) {
+      throw new Error("runtime message listener is not registered");
+    }
+
+    tabsSendMessage.mockImplementationOnce(async () => undefined);
+
+    const response = (await runtimeMessageListener({
+      type: CLIP_ACTIVE_TAB_MESSAGE,
+    })) as ClipResponse;
+
+    expect(response).toEqual({
+      success: false,
+      error: "No response from content script.",
     });
     expect(setBadgeBackgroundColor).toHaveBeenCalledWith({ color: "#dc2626" });
     expect(setBadgeText).toHaveBeenCalledWith({ text: "✕" });

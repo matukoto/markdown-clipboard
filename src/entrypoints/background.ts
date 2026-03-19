@@ -49,15 +49,20 @@ async function clipActiveTab(): Promise<ClipResponse> {
     const tabId = await getActiveTabId();
     const response = (await browser.tabs.sendMessage(tabId, {
       type: CLIP_PAGE_MESSAGE,
-    })) as ClipResponse;
+    })) as ClipResponse | undefined;
 
-    if (response.success) {
+    if (response?.success) {
       await setBadge("✓", "#16a34a");
       return response;
     }
 
     await setBadge("✕", "#dc2626");
-    return response;
+    return (
+      response ?? {
+        success: false,
+        error: "No response from content script.",
+      }
+    );
   } catch (error) {
     await setBadge("✕", "#dc2626");
 
