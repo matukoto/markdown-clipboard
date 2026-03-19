@@ -5,16 +5,16 @@ export default defineConfig({
   srcDir: "src",
   modules: ["@wxt-dev/module-svelte"],
   manifest: {
-    name: "Markdown Web Clipper",
-    description:
-      "Extract the main content of the current page, convert it to Markdown, and copy it to the clipboard.",
+    default_locale: "en",
+    name: "__MSG_extName__",
+    description: "__MSG_extDescription__",
     permissions: ["tabs", "storage", "contextMenus", "clipboardWrite"],
     action: {
-      default_title: "Markdown Web Clipper",
+      default_title: "__MSG_actionDefaultTitle__",
     },
     commands: {
       "clip-active-tab": {
-        description: "Copy the current page as Markdown",
+        description: "__MSG_commandClipActiveTabDescription__",
         suggested_key: {
           default: "Ctrl+Shift+Y",
           mac: "Command+Shift+Y",
