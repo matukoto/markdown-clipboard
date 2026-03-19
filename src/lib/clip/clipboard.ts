@@ -1,20 +1,22 @@
+import { isInstanceOf } from "unknownutil";
+
 export async function writeTextToClipboard(text: string): Promise<void> {
   if (navigator.clipboard?.writeText !== undefined) {
     try {
       await navigator.clipboard.writeText(text);
       return;
     } catch (error) {
-      const clipboardMessage =
-        error instanceof Error ? error.message : "Unknown clipboard error.";
+      const clipboardMessage = isInstanceOf(Error)(error)
+        ? error.message
+        : "Unknown clipboard error.";
 
       try {
         copyWithExecCommand(text);
         return;
       } catch (fallbackError) {
-        const fallbackMessage =
-          fallbackError instanceof Error
-            ? fallbackError.message
-            : "Unknown fallback clipboard error.";
+        const fallbackMessage = isInstanceOf(Error)(fallbackError)
+          ? fallbackError.message
+          : "Unknown fallback clipboard error.";
 
         throw new Error(
           `Clipboard API failed: ${clipboardMessage}; fallback copy failed: ${fallbackMessage}`

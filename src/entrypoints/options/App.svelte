@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import { isInstanceOf } from "unknownutil";
   import {
     getClipContentOptions,
     setClipContentOptions,
@@ -17,10 +18,9 @@
       includeLinks = options.includeLinks;
       includeImages = options.includeImages;
     } catch (error) {
-      errorMessage =
-        error instanceof Error
-          ? error.message
-          : "設定の読み込みに失敗しました。";
+      errorMessage = isInstanceOf(Error)(error)
+        ? error.message
+        : "設定の読み込みに失敗しました。";
     } finally {
       isLoading = false;
     }
@@ -39,18 +39,21 @@
       includeImages = next.includeImages;
       statusMessage = "設定を保存しました。";
     } catch (error) {
-      errorMessage =
-        error instanceof Error ? error.message : "設定の保存に失敗しました。";
+      errorMessage = isInstanceOf(Error)(error)
+        ? error.message
+        : "設定の保存に失敗しました。";
     }
   }
 
   function handleIncludeLinksChange(event: Event) {
-    includeLinks = (event.currentTarget as HTMLInputElement).checked;
+    if (!isInstanceOf(HTMLInputElement)(event.currentTarget)) return;
+    includeLinks = event.currentTarget.checked;
     void saveSettings();
   }
 
   function handleIncludeImagesChange(event: Event) {
-    includeImages = (event.currentTarget as HTMLInputElement).checked;
+    if (!isInstanceOf(HTMLInputElement)(event.currentTarget)) return;
+    includeImages = event.currentTarget.checked;
     void saveSettings();
   }
 </script>
