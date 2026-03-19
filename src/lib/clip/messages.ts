@@ -11,6 +11,16 @@ export interface ClipPageRequest {
   type: typeof CLIP_PAGE_MESSAGE;
 }
 
+export function isClipActiveTabRequest(
+  value: unknown
+): value is ClipActiveTabRequest {
+  return hasMessageType(value, CLIP_ACTIVE_TAB_MESSAGE);
+}
+
+export function isClipPageRequest(value: unknown): value is ClipPageRequest {
+  return hasMessageType(value, CLIP_PAGE_MESSAGE);
+}
+
 export type ClipResponse =
   | {
       success: true;
@@ -20,3 +30,12 @@ export type ClipResponse =
       success: false;
       error: string;
     };
+
+function hasMessageType(value: unknown, expectedType: string): boolean {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "type" in value &&
+    value.type === expectedType
+  );
+}
