@@ -1,16 +1,24 @@
 <script lang="ts">
+  import { onMount } from "svelte";
   import {
     CLIP_ACTIVE_TAB_MESSAGE,
     type ClipResponse,
   } from "../../lib/clip/messages";
   import { renderClipOutput } from "../../lib/clip/output";
+  import {
+    getClipContentOptions,
+    setClipContentOptions,
+  } from "../../lib/clip/settings";
 
-  let isLoading = false;
-  let copiedTitle = "";
-  let copiedUrl = "";
+  let isLoading = $state(false);
+  let copiedTitle = $state("");
+  let copiedUrl = $state("");
   let markdownPreview = "";
-  let preview = "";
-  let errorMessage = "";
+  let preview = $state("");
+  let errorMessage = $state("");
+  let includeLinks = $state(false);
+  let includeImages = $state(false);
+  let isSettingsLoading = $state(true);
 
   async function clipActiveTab() {
     isLoading = true;
@@ -47,32 +55,94 @@
       isLoading = false;
     }
   }
+
+  onMount(async () => {
+    try {
+      const options = await getClipContentOptions();
+      includeLinks = options.includeLinks;
+      includeImages = options.includeImages;
+    } catch (error) {
+      errorMessage =
+        error instanceof Error
+          ? error.message
+          : "設定の読み込みに失敗しました。";
+    } finally {
+      isSettingsLoading = false;
+    }
+  });
+
+  async function saveSettings() {
+    errorMessage = "";
+
+    try {
+      const next = await setClipContentOptions({
+        includeLinks,
+        includeImages,
+      });
+      includeLinks = next.includeLinks;
+      includeImages = next.includeImages;
+    } catch (error) {
+      errorMessage =
+        error instanceof Error ? error.message : "設定の保存に失敗しました。";
+    }
+  }
+
+  function handleIncludeLinksChange(event: Event) {
+    includeLinks = (event.currentTarget as HTMLInputElement).checked;
+    void saveSettings();
+  }
+
+  function handleIncludeImagesChange(event: Event) {
+    includeImages = (event.currentTarget as HTMLInputElement).checked;
+    void saveSettings();
+  }
 </script>
 
 <main class="popup">
   <header class="hero">
     <p class="eyebrow">Markdown Web Clipper</p>
-    <h1>Copy the current page as Markdown</h1>
+    <h1>現在のページをMarkdownとしてコピー</h1>
     <p class="description">
-      Extract the main content from the active tab and copy a Markdown version
-      to your clipboard.
+      アクティブタブの本文を抽出し、Markdownとしてクリップボードにコピーします。
     </p>
   </header>
+
+  <section class="settings" aria-label="クリップ設定">
+    <p class="settings-title">コピー設定</p>
+    <label class="toggle">
+      <input
+        type="checkbox"
+        checked={includeLinks}
+        onchange={handleIncludeLinksChange}
+        disabled={isSettingsLoading}
+      >
+      <span>リンクを含める</span>
+    </label>
+    <label class="toggle">
+      <input
+        type="checkbox"
+        checked={includeImages}
+        onchange={handleIncludeImagesChange}
+        disabled={isSettingsLoading}
+      >
+      <span>画像を含める</span>
+    </label>
+  </section>
 
   <button
     class="primary"
     type="button"
-    on:click={clipActiveTab}
+    onclick={clipActiveTab}
     disabled={isLoading}
   >
     {#if isLoading}
-      Copying…
+      コピー中…
     {:else}
-      Copy current page
+      現在のページをコピー
     {/if}
   </button>
 
-  <p class="shortcut">Shortcut: Cmd/Ctrl + Shift + Y</p>
+  <p class="shortcut">ショートカット: Cmd/Ctrl + Shift + Y</p>
 
   {#if errorMessage !== ""}
     <p class="status error">{errorMessage}</p>
@@ -80,7 +150,7 @@
 
   {#if copiedTitle !== ""}
     <section class="result">
-      <p class="status success">Copied successfully.</p>
+      <p class="status success">コピーしました。</p>
       <h2>{copiedTitle}</h2>
       <p class="url">{copiedUrl}</p>
       <pre>{preview}</pre>
@@ -128,14 +198,44 @@
   .description,
   .shortcut,
   .status,
-  .url {
+  .url,
+  .settings-title {
     margin: 0;
   }
 
   .description,
   .shortcut,
-  .url {
+  .url,
+  .settings-title {
     color: #475569;
+  }
+
+  .settings {
+    display: grid;
+    gap: 0.65rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.875rem;
+    padding: 0.8rem 0.9rem;
+    background: #f8fafc;
+  }
+
+  .settings-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #0f172a;
+    font-size: 0.9rem;
+  }
+
+  .toggle input {
+    width: 1rem;
+    height: 1rem;
+    accent-color: #2563eb;
   }
 
   .primary {
