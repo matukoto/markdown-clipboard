@@ -29,4 +29,52 @@ describe("renderMarkdown の振る舞い", () => {
   it("空の HTML では空文字を返す", () => {
     expect(renderMarkdown("")).toBe("");
   });
+
+  it("table 要素を GFM 形式の表として変換する", () => {
+    const contentHtml = `
+      <table>
+        <thead>
+          <tr><th>Feature</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Table output</td><td>Enabled</td></tr>
+          <tr><td>Task list</td><td>Planned</td></tr>
+        </tbody>
+      </table>
+    `;
+
+    expect(renderMarkdown(contentHtml)).toBe(
+      [
+        "| Feature | Status |",
+        "| --- | --- |",
+        "| Table output | Enabled |",
+        "| Task list | Planned |",
+      ].join("\n")
+    );
+  });
+
+  it("表の前後にある本文も崩さずに出力する", () => {
+    const contentHtml = `
+      <article>
+        <p>Before table</p>
+        <table>
+          <thead>
+            <tr><th>Name</th><th>Role</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Alice</td><td>Maintainer</td></tr>
+          </tbody>
+        </table>
+        <p>After table</p>
+      </article>
+    `;
+
+    expect(renderMarkdown(contentHtml)).toBe(`Before table
+
+| Name | Role |
+| --- | --- |
+| Alice | Maintainer |
+
+After table`);
+  });
 });
