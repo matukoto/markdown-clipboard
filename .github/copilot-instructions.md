@@ -22,16 +22,16 @@
 
 - **Extension Framework:** Uses [WXT](https://wxt.dev/) for Chrome/Firefox extension development.
 - **Clip pipeline:** `src/lib/clip/` contains the core clipper pipeline.
-  - `extract.ts` turns DOM content into semantic blocks
-  - `markdown.ts` renders those blocks into Markdown
+  - `extract.ts` passes the current DOM through `@mozilla/readability` and post-processes the extracted HTML for settings like link/image inclusion
+  - `markdown.ts` converts extracted HTML into Markdown with `turndown`
   - `output.ts` formats the final clipboard text and is the extension point for metadata/frontmatter-style output
-  - `clip.ts` assembles metadata, extracted blocks, and Markdown into a `ClipResult`
-- **Frontend:** Built with Svelte 5. `src/entrypoints/popup/App.svelte` triggers clipping through the background script and previews the copied output.
+  - `clip.ts` assembles metadata, extracted HTML, and Markdown into a `ClipResult`
+- **Frontend:** Built with Svelte 5. `src/entrypoints/options/App.svelte` is the settings UI for output toggles such as link/image inclusion.
 - **Entry Points:**
-  - `src/entrypoints/background.ts`: Orchestrates clipping for the active tab, responds to popup messages, and handles the keyboard shortcut/badge feedback
+  - `src/entrypoints/background.ts`: Orchestrates clipping for the active tab and handles the toolbar click, keyboard shortcut, and badge feedback
   - `src/entrypoints/content.ts`: Runs on `http`/`https` pages, extracts the page, formats the clip output, and writes it to the clipboard
-  - `src/entrypoints/popup/main.ts`: Mounts Svelte app
-- **Manifest/config:** `wxt.config.ts` defines the extension metadata, `tabs` permission, and the `clip-active-tab` command shortcut.
+  - `src/entrypoints/options/main.ts`: Mounts the options/settings app
+- **Manifest/config:** `wxt.config.ts` defines the extension metadata, `tabs`/`storage` permissions, and the `clip-active-tab` command shortcut.
 
 ## Key Conventions
 
@@ -40,13 +40,15 @@
   - Indent style: 2 spaces, LF line endings, double quotes for JS, semicolons always.
 - **TDD-first core logic:**
   - Keep clipper behavior in plain TypeScript modules under `src/lib/clip/` and cover them with Vitest before wiring browser APIs.
-  - Prefer adding tests around semantic blocks and rendered Markdown rather than testing browser entrypoints directly.
+  - Prefer adding tests around extracted HTML, rendered Markdown, and output formatting rather than around browser APIs.
 - **Metadata separation:**
   - `ClipMetadata` / `ClipResult` carry title, URL, and clip timestamp separately from the rendered Markdown.
   - If note-app-specific output is added later, prefer extending `output.ts` instead of mixing formatting into extraction or browser scripts.
 - **Svelte:**
   - Svelte components use TypeScript (`lang="ts"`).
-  - Keep popup UI thin; browser orchestration belongs in `background.ts`, not in the component.
+  - Keep the options UI thin; browser orchestration belongs in `background.ts` and `content.ts`, not in the component.
+- **Testing layout:**
+  - Keep extension entrypoint tests under `src/tests/`, not under `src/entrypoints/`, so WXT does not treat `*.test.ts` files as real entrypoints during build.
 - **WXT:**
   - `wxt.config.ts` specifies `src` as the source directory, includes the Svelte module, and is the right place for manifest-level permissions and commands.
   - Content-script match patterns are declared in `src/entrypoints/content.ts`, so broadening site coverage should start there.
