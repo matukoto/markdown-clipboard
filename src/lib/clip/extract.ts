@@ -24,20 +24,22 @@ export function extractReadableContent(
   setBaseUrl(clonedDocument, baseUrl);
   stripObviousNoise(clonedDocument);
   const article = new Readability(clonedDocument).parse();
+  const readabilityContentHtml = isString(article?.content)
+    ? article.content.trim()
+    : "";
+  const contentSourceHtml =
+    readabilityContentHtml === ""
+      ? selectFallbackContentHtml(clonedDocument)
+      : readabilityContentHtml;
+  const title = normalizeText(article?.title || document.title);
 
-  if (article === null) {
+  if (contentSourceHtml === "") {
     return emptyExtractedContent();
   }
 
-  if (article.content === null || article.content === undefined) {
-    return emptyExtractedContent();
-  }
-
-  const extractedDocument = document.implementation.createHTMLDocument(
-    article.title || document.title
-  );
-  extractedDocument.body.innerHTML = article.content;
-  prependTitleHeading(extractedDocument.body, article.title || document.title);
+  const extractedDocument = document.implementation.createHTMLDocument(title);
+  extractedDocument.body.innerHTML = contentSourceHtml;
+  prependTitleHeading(extractedDocument.body, title);
   postProcessExtractedContent(extractedDocument.body, baseUrl, options);
 
   const contentHtml = extractedDocument.body.innerHTML.trim();
@@ -52,10 +54,40 @@ export function extractReadableContent(
   }
 
   return {
-    title: normalizeText(article.title || document.title),
+    title,
     contentHtml,
     textContent,
   };
+}
+
+function selectFallbackContentHtml(document: Document): string {
+  const candidates = [
+    document.querySelector("article"),
+    document.querySelector("main"),
+    document.querySelector("[role='main']"),
+    document.body,
+  ];
+
+  for (const candidate of candidates) {
+    if (!isInstanceOf(HTMLElement)(candidate)) {
+      continue;
+    }
+
+    const contentHtml = candidate.innerHTML.trim();
+    const rawTextContent = candidate.textContent;
+
+    if (!isString(rawTextContent)) {
+      continue;
+    }
+
+    const textContent = normalizeText(rawTextContent);
+
+    if (contentHtml !== "" && textContent !== "") {
+      return contentHtml;
+    }
+  }
+
+  return "";
 }
 
 function postProcessExtractedContent(

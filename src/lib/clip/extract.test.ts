@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { Readability } from "@mozilla/readability";
+import { describe, expect, it, vi } from "vitest";
 
 import { extractReadableContent } from "./extract";
 import { DEFAULT_CLIP_CONTENT_OPTIONS } from "./settings";
@@ -130,5 +131,38 @@ describe("extractReadableContent の振る舞い", () => {
       contentHtml: "",
       textContent: "",
     });
+  });
+
+  it("Readability が null を返しても article 要素からフォールバック抽出する", async () => {
+    document.title = "Fallback page";
+    document.body.innerHTML = `
+      <main>
+        <article>
+          <p>Read the <a href="/docs">documentation</a>.</p>
+          <img src="/diagram.png" alt="diagram">
+        </article>
+      </main>
+    `;
+
+    const readabilityParseSpy = vi
+      .spyOn(Readability.prototype, "parse")
+      .mockReturnValue(null);
+
+    try {
+      const result = extractReadableContent(
+        document,
+        "https://example.com/posts/clipper",
+        DEFAULT_CLIP_CONTENT_OPTIONS
+      );
+
+      expect(readabilityParseSpy).toHaveBeenCalledTimes(1);
+      expect(result.title).toBe("Fallback page");
+      expect(result.contentHtml).toContain("Read the documentation.");
+      expect(result.contentHtml).not.toContain("<a ");
+      expect(result.contentHtml).not.toContain("<img");
+      expect(result.textContent).toContain("Read the documentation.");
+    } finally {
+      readabilityParseSpy.mockRestore();
+    }
   });
 });
