@@ -6,7 +6,7 @@ import type { ClipContentOptions, ExtractedContent } from "./types";
 const NOISE_SELECTOR =
   "nav, header, footer, aside, script, style, noscript, form, button, iframe, template, [hidden], [aria-hidden='true'], .ad, .ads, .advertisement, .breadcrumb, .share, .social";
 
-const DEFAULT_CLIP_CONTENT_OPTIONS: ClipContentOptions = {
+const DEFAULT_EXTRACT_OPTIONS: ClipContentOptions = {
   includeLinks: true,
   includeImages: true,
 };
@@ -14,7 +14,7 @@ const DEFAULT_CLIP_CONTENT_OPTIONS: ClipContentOptions = {
 export function extractReadableContent(
   document: Document,
   baseUrl: string,
-  options: ClipContentOptions = DEFAULT_CLIP_CONTENT_OPTIONS
+  options: ClipContentOptions = DEFAULT_EXTRACT_OPTIONS
 ): ExtractedContent {
   const clonedDocument = document.cloneNode(true) as Document;
   setBaseUrl(clonedDocument, baseUrl);

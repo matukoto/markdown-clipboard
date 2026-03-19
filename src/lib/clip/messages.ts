@@ -32,10 +32,10 @@ export type ClipResponse =
     };
 
 function hasMessageType(value: unknown, expectedType: string): boolean {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "type" in value &&
-    value.type === expectedType
-  );
+  if (typeof value !== "object" || value === null || !("type" in value)) {
+    return false;
+  }
+
+  const message = value as { type?: unknown };
+  return typeof message.type === "string" && message.type === expectedType;
 }

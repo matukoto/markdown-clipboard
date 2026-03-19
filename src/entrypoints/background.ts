@@ -6,6 +6,7 @@ import {
 } from "../lib/clip/messages";
 
 const BADGE_RESET_DELAY_MS = 3000;
+let badgeResetTimeoutId: ReturnType<typeof setTimeout> | undefined;
 
 export default defineBackground(() => {
   browser.runtime.onMessage.addListener((message: unknown) => {
@@ -87,7 +88,12 @@ async function setBadge(text: string, color: string): Promise<void> {
   await browser.action.setBadgeBackgroundColor({ color });
   await browser.action.setBadgeText({ text });
 
-  setTimeout(() => {
+  if (badgeResetTimeoutId !== undefined) {
+    clearTimeout(badgeResetTimeoutId);
+  }
+
+  badgeResetTimeoutId = setTimeout(() => {
+    badgeResetTimeoutId = undefined;
     void browser.action.setBadgeText({ text: "" });
   }, BADGE_RESET_DELAY_MS);
 }

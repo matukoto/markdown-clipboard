@@ -39,6 +39,7 @@ describe("background entrypoint", () => {
     vi.resetModules();
     runtimeMessageListener = undefined;
     commandListener = undefined;
+    actionClickListener = undefined;
 
     (
       globalThis as unknown as {
@@ -176,5 +177,27 @@ describe("background entrypoint", () => {
     });
     expect(setBadgeBackgroundColor).toHaveBeenCalledWith({ color: "#dc2626" });
     expect(setBadgeText).toHaveBeenCalledWith({ text: "✕" });
+  });
+
+  it("連続でクリップしても前回のタイマーで新しいバッジを消さない", async () => {
+    if (runtimeMessageListener === undefined) {
+      throw new Error("runtime message listener is not registered");
+    }
+
+    await runtimeMessageListener({
+      type: CLIP_ACTIVE_TAB_MESSAGE,
+    });
+    await vi.advanceTimersByTimeAsync(2000);
+
+    await runtimeMessageListener({
+      type: CLIP_ACTIVE_TAB_MESSAGE,
+    });
+    await vi.advanceTimersByTimeAsync(1000);
+
+    expect(setBadgeText).toHaveBeenCalledTimes(2);
+
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(setBadgeText).toHaveBeenCalledTimes(3);
+    expect(setBadgeText).toHaveBeenLastCalledWith({ text: "" });
   });
 });
