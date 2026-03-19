@@ -19,6 +19,7 @@ describe("background entrypoint", () => {
   const setBadgeBackgroundColor = vi.fn(async () => undefined);
   const setBadgeText = vi.fn(async () => undefined);
   const tabsQuery = vi.fn(async () => [{ id: 123 }]);
+  const scriptingExecuteScript = vi.fn(async () => []);
   const tabsSendMessage = vi.fn(async (): Promise<ClipMessageResponse> => {
     return {
       success: true,
@@ -75,7 +76,7 @@ describe("background entrypoint", () => {
         sendMessage: tabsSendMessage,
       },
       scripting: {
-        executeScript: vi.fn(async () => []),
+        executeScript: scriptingExecuteScript,
       },
       action: {
         onClicked: {
@@ -154,26 +155,44 @@ describe("background entrypoint", () => {
     });
   });
 
-  it("content script との通信に失敗したら失敗バッジを返す", async () => {
+  it("content script が未注入なら注入して再試行する", async () => {
     if (runtimeMessageListener === undefined) {
       throw new Error("runtime message listener is not registered");
     }
 
-    tabsSendMessage
-      .mockRejectedValueOnce(
-        new Error("Cannot establish connection. Receiving end does not exist.")
-      )
-      .mockRejectedValueOnce(
-        new Error("Cannot establish connection. Receiving end does not exist.")
-      );
+    tabsSendMessage.mockRejectedValueOnce(
+      new Error("Cannot establish connection. Receiving end does not exist.")
+    );
 
     const response = (await runtimeMessageListener({
       type: CLIP_ACTIVE_TAB_MESSAGE,
     })) as ClipResponse;
 
+    expect(scriptingExecuteScript).toHaveBeenCalledWith({
+      target: { tabId: 123 },
+      files: ["/content-scripts/content.js"],
+    });
+    expect(tabsSendMessage).toHaveBeenCalledTimes(2);
+    expect(response.success).toBe(true);
+    expect(setBadgeBackgroundColor).toHaveBeenCalledWith({ color: "#16a34a" });
+    expect(setBadgeText).toHaveBeenCalledWith({ text: "✓" });
+  });
+
+  it("未注入以外の sendMessage エラーでは再試行しない", async () => {
+    if (runtimeMessageListener === undefined) {
+      throw new Error("runtime message listener is not registered");
+    }
+
+    tabsSendMessage.mockRejectedValueOnce(new Error("Tab is already closed."));
+
+    const response = (await runtimeMessageListener({
+      type: CLIP_ACTIVE_TAB_MESSAGE,
+    })) as ClipResponse;
+
+    expect(scriptingExecuteScript).not.toHaveBeenCalled();
     expect(response).toEqual({
       success: false,
-      error: "Cannot establish connection. Receiving end does not exist.",
+      error: "Tab is already closed.",
     });
     expect(setBadgeBackgroundColor).toHaveBeenCalledWith({ color: "#dc2626" });
     expect(setBadgeText).toHaveBeenCalledWith({ text: "✕" });
