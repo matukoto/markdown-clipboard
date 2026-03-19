@@ -1,9 +1,18 @@
+import { isBoolean, isObjectOf, isPartialOf } from "unknownutil";
+
 import type { ClipContentOptions } from "./types";
 
 export const DEFAULT_CLIP_CONTENT_OPTIONS: ClipContentOptions = {
   includeLinks: false,
   includeImages: false,
 };
+
+const isClipContentOptions = isObjectOf({
+  includeLinks: isBoolean,
+  includeImages: isBoolean,
+});
+
+const isPartialClipContentOptions = isPartialOf(isClipContentOptions);
 
 export function resolveClipContentOptions(
   value: Partial<ClipContentOptions> | undefined
@@ -20,8 +29,9 @@ const STORAGE_KEY = "clip-content-options";
 
 export async function getClipContentOptions(): Promise<ClipContentOptions> {
   const result = await browser.storage.local.get(STORAGE_KEY);
+  const storedValue = result[STORAGE_KEY];
   return resolveClipContentOptions(
-    result[STORAGE_KEY] as Partial<ClipContentOptions> | undefined
+    isPartialClipContentOptions(storedValue) ? storedValue : undefined
   );
 }
 
