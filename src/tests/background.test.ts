@@ -83,12 +83,6 @@ describe("background entrypoint", () => {
         setBadgeBackgroundColor,
         setBadgeText,
       },
-      contextMenus: {
-        create: vi.fn(),
-        onClicked: {
-          addListener: vi.fn(),
-        },
-      },
     };
 
     await import("../entrypoints/background");
