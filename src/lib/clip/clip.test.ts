@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { clipPage, createClipMetadata } from "./clip";
+import { DEFAULT_CLIP_CONTENT_OPTIONS } from "./settings";
 
 describe("createClipMetadata の振る舞い", () => {
   it("空のタイトルを安定したフォールバック値に正規化する", () => {
@@ -34,6 +35,7 @@ describe("clipPage の振る舞い", () => {
       clipPage(
         document,
         "https://example.com/posts/clipper",
+        DEFAULT_CLIP_CONTENT_OPTIONS,
         "2026-03-19T00:00:00.000Z"
       )
     ).toEqual({

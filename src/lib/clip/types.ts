@@ -4,6 +4,11 @@ export interface ClipMetadata {
   clippedAt: string;
 }
 
+export interface ClipContentOptions {
+  includeLinks: boolean;
+  includeImages: boolean;
+}
+
 export type InlineNode =
   | {
       type: "text";

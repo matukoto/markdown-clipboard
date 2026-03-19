@@ -21,6 +21,15 @@ describe("content entrypoint", () => {
       };
     });
 
+    vi.doMock("../lib/clip/settings", () => {
+      return {
+        getClipContentOptions: async () => ({
+          includeLinks: false,
+          includeImages: false,
+        }),
+      };
+    });
+
     (
       globalThis as unknown as {
         defineContentScript: (entry: { main: () => void }) => unknown;
@@ -46,6 +55,7 @@ describe("content entrypoint", () => {
   afterEach(() => {
     vi.clearAllMocks();
     vi.doUnmock("../lib/clip/clipboard");
+    vi.doUnmock("../lib/clip/settings");
   });
 
   it("クリップ要求で Markdown を生成してクリップボードへ書き込む", async () => {
@@ -72,6 +82,32 @@ describe("content entrypoint", () => {
     expect(writeTextToClipboardMock).toHaveBeenCalledTimes(1);
     expect(clipboardText).toContain("Source: ");
     expect(clipboardText).toContain("# Markdown Web Clipper");
+  });
+
+  it("設定でリンクと画像を無効にした場合はプレーンテキスト寄りで出力する", async () => {
+    if (runtimeMessageListener === undefined) {
+      throw new Error("runtime message listener is not registered");
+    }
+
+    document.title = "Markdown Web Clipper";
+    document.body.innerHTML = `
+      <main>
+        <article>
+          <p>Read the <a href="/docs">documentation</a>.</p>
+          <img src="/diagram.png" alt="diagram">
+        </article>
+      </main>
+    `;
+
+    const response = (await runtimeMessageListener({
+      type: CLIP_PAGE_MESSAGE,
+    })) as ClipResponse;
+    const clipboardText = writeTextToClipboardMock.mock.calls.at(-1)?.[0] ?? "";
+
+    expect(response.success).toBe(true);
+    expect(clipboardText).toContain("Read the documentation.");
+    expect(clipboardText).not.toContain("[documentation](");
+    expect(clipboardText).not.toContain("![diagram](");
   });
 
   it("抽出結果が空なら失敗レスポンスを返す", async () => {
