@@ -1,3 +1,5 @@
+import { isInstanceOf } from "unknownutil";
+
 import {
   CLIP_ACTIVE_TAB_MESSAGE,
   CLIP_PAGE_MESSAGE,
@@ -68,10 +70,9 @@ async function clipActiveTab(): Promise<ClipResponse> {
 
     return {
       success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to clip the active tab.",
+      error: isInstanceOf(Error)(error)
+        ? error.message
+        : "Failed to clip the active tab.",
     };
   }
 }

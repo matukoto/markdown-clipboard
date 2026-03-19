@@ -1,3 +1,5 @@
+import { isInstanceOf } from "unknownutil";
+
 import { clipPage } from "../lib/clip/clip";
 import { writeTextToClipboard } from "../lib/clip/clipboard";
 import { type ClipResponse, isClipPageRequest } from "../lib/clip/messages";
@@ -22,10 +24,9 @@ async function handleClipPageRequest(): Promise<ClipResponse> {
   } catch (error) {
     return {
       success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to clip the current page.",
+      error: isInstanceOf(Error)(error)
+        ? error.message
+        : "Failed to clip the current page.",
     };
   }
 }

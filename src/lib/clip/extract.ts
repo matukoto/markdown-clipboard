@@ -1,4 +1,5 @@
 import { Readability } from "@mozilla/readability";
+import { isInstanceOf, isString } from "unknownutil";
 
 import { normalizeText } from "./text";
 import type { ClipContentOptions, ExtractedContent } from "./types";
@@ -16,7 +17,10 @@ export function extractReadableContent(
   baseUrl: string,
   options: ClipContentOptions = DEFAULT_EXTRACT_OPTIONS
 ): ExtractedContent {
-  const clonedDocument = document.cloneNode(true) as Document;
+  const clonedDocument = document.cloneNode(true);
+  if (!isInstanceOf(Document)(clonedDocument)) {
+    return emptyExtractedContent();
+  }
   setBaseUrl(clonedDocument, baseUrl);
   stripObviousNoise(clonedDocument);
   const article = new Readability(clonedDocument).parse();
@@ -37,7 +41,11 @@ export function extractReadableContent(
   postProcessExtractedContent(extractedDocument.body, baseUrl, options);
 
   const contentHtml = extractedDocument.body.innerHTML.trim();
-  const textContent = normalizeText(extractedDocument.body.textContent ?? "");
+  const rawTextContent = extractedDocument.body.textContent;
+  if (!isString(rawTextContent)) {
+    return emptyExtractedContent();
+  }
+  const textContent = normalizeText(rawTextContent);
 
   if (contentHtml === "" || textContent === "") {
     return emptyExtractedContent();
@@ -101,7 +109,7 @@ function unwrapElement(element: Element): void {
 function setBaseUrl(document: Document, baseUrl: string): void {
   let base = document.querySelector("base");
 
-  if (!(base instanceof HTMLBaseElement)) {
+  if (!isInstanceOf(HTMLBaseElement)(base)) {
     base = document.createElement("base");
     document.head.prepend(base);
   }
@@ -124,7 +132,7 @@ function prependTitleHeading(root: HTMLElement, title: string): void {
 
   const existingHeading = root.querySelector("h1, h2");
 
-  if (existingHeading?.textContent !== undefined) {
+  if (isString(existingHeading?.textContent)) {
     const headingText = normalizeText(existingHeading.textContent);
 
     if (headingText === normalizedTitle) {
