@@ -68,6 +68,44 @@ describe("extractClipDocument の振る舞い", () => {
     });
   });
 
+  it("リンクと画像の相対 URL をページ URL 基準で絶対化する", () => {
+    document.body.innerHTML = `
+      <main>
+        <article>
+          <p>
+            Read the
+            <a href="/docs/getting-started">documentation</a>
+            before you start.
+          </p>
+          <img src="./assets/diagram.png" alt="Architecture diagram">
+        </article>
+      </main>
+    `;
+
+    expect(extractClipDocument(document, metadata)).toEqual({
+      metadata,
+      blocks: [
+        {
+          type: "paragraph",
+          children: [
+            { type: "text", text: "Read the " },
+            {
+              type: "link",
+              text: "documentation",
+              href: "https://example.com/docs/getting-started",
+            },
+            { type: "text", text: " before you start." },
+          ],
+        },
+        {
+          type: "image",
+          alt: "Architecture diagram",
+          src: "https://example.com/posts/assets/diagram.png",
+        },
+      ],
+    });
+  });
+
   it("意味的なコンテナがない場合は body の本文へフォールバックする", () => {
     document.body.innerHTML = `
       <div>

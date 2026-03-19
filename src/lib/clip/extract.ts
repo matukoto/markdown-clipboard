@@ -42,7 +42,7 @@ export function extractClipDocument(
   metadata: ClipMetadata
 ): ClipDocument {
   const primaryRoot = selectRoot(document);
-  const primaryBlocks = extractBlocksFromRoot(primaryRoot);
+  const primaryBlocks = extractBlocksFromRoot(primaryRoot, metadata.url);
 
   if (primaryBlocks.length > 0) {
     return {
@@ -53,7 +53,7 @@ export function extractClipDocument(
 
   return {
     metadata,
-    blocks: extractBlocksFromRoot(document.body),
+    blocks: extractBlocksFromRoot(document.body, metadata.url),
   };
 }
 
@@ -76,18 +76,21 @@ function selectRoot(document: Document): HTMLElement {
   })[0];
 }
 
-function extractBlocksFromRoot(root: HTMLElement): ClipBlock[] {
+function extractBlocksFromRoot(
+  root: HTMLElement,
+  baseUrl: string
+): ClipBlock[] {
   const preparedRoot = root.cloneNode(true) as HTMLElement;
   preparedRoot.querySelectorAll(NOISE_SELECTOR).forEach((node) => {
     node.remove();
   });
 
   return Array.from(preparedRoot.childNodes).flatMap((node) =>
-    extractBlocks(node)
+    extractBlocks(node, baseUrl)
   );
 }
 
-function extractBlocks(node: Node): ClipBlock[] {
+function extractBlocks(node: Node, baseUrl: string): ClipBlock[] {
   if (node.nodeType === Node.TEXT_NODE) {
     const text = normalizeText(node.textContent ?? "");
 
@@ -117,7 +120,7 @@ function extractBlocks(node: Node): ClipBlock[] {
     tagName === "h5" ||
     tagName === "h6"
   ) {
-    const children = extractInlineNodes(node);
+    const children = extractInlineNodes(node, baseUrl);
 
     if (children.length === 0) {
       return [];
@@ -133,7 +136,7 @@ function extractBlocks(node: Node): ClipBlock[] {
   }
 
   if (tagName === "p") {
-    const children = extractInlineNodes(node);
+    const children = extractInlineNodes(node, baseUrl);
 
     if (children.length === 0) {
       return [];
@@ -150,7 +153,7 @@ function extractBlocks(node: Node): ClipBlock[] {
   if (tagName === "ul" || tagName === "ol") {
     const items = Array.from(node.children)
       .filter((child) => child instanceof HTMLLIElement)
-      .map((item) => extractListItem(item))
+      .map((item) => extractListItem(item, baseUrl))
       .filter((item) => item.length > 0);
 
     if (items.length === 0) {
@@ -177,16 +180,18 @@ function extractBlocks(node: Node): ClipBlock[] {
       {
         type: "image",
         alt: normalizeText(node.getAttribute("alt") ?? ""),
-        src,
+        src: resolveUrl(src, baseUrl),
       },
     ];
   }
 
   if (hasBlockChildren(node)) {
-    return Array.from(node.childNodes).flatMap((child) => extractBlocks(child));
+    return Array.from(node.childNodes).flatMap((child) =>
+      extractBlocks(child, baseUrl)
+    );
   }
 
-  const children = extractInlineNodes(node);
+  const children = extractInlineNodes(node, baseUrl);
 
   if (children.length === 0) {
     return [];
@@ -206,16 +211,16 @@ function hasBlockChildren(element: HTMLElement): boolean {
   );
 }
 
-function extractListItem(item: HTMLLIElement): InlineNode[] {
+function extractListItem(item: HTMLLIElement, baseUrl: string): InlineNode[] {
   const clone = item.cloneNode(true) as HTMLLIElement;
   clone.querySelectorAll("ul, ol").forEach((node) => {
     node.remove();
   });
-  return extractInlineNodes(clone);
+  return extractInlineNodes(clone, baseUrl);
 }
 
-function extractInlineNodes(node: Node): InlineNode[] {
-  const collected = collectInlineNodes(node);
+function extractInlineNodes(node: Node, baseUrl: string): InlineNode[] {
+  const collected = collectInlineNodes(node, baseUrl);
   const merged: InlineNode[] = [];
 
   for (const entry of collected) {
@@ -255,7 +260,7 @@ function extractInlineNodes(node: Node): InlineNode[] {
   return merged.filter((entry) => entry.type !== "text" || entry.text !== "");
 }
 
-function collectInlineNodes(node: Node): InlineNode[] {
+function collectInlineNodes(node: Node, baseUrl: string): InlineNode[] {
   if (node.nodeType === Node.TEXT_NODE) {
     return [
       {
@@ -280,7 +285,7 @@ function collectInlineNodes(node: Node): InlineNode[] {
 
     if (href === null || href === "") {
       return Array.from(node.childNodes).flatMap((child) =>
-        collectInlineNodes(child)
+        collectInlineNodes(child, baseUrl)
       );
     }
 
@@ -288,7 +293,7 @@ function collectInlineNodes(node: Node): InlineNode[] {
       {
         type: "link",
         text: normalizeText(node.textContent ?? href) || href,
-        href,
+        href: resolveUrl(href, baseUrl),
       },
     ];
   }
@@ -304,7 +309,7 @@ function collectInlineNodes(node: Node): InlineNode[] {
       {
         type: "image",
         alt: normalizeText(node.getAttribute("alt") ?? ""),
-        src,
+        src: resolveUrl(src, baseUrl),
       },
     ];
   }
@@ -314,6 +319,14 @@ function collectInlineNodes(node: Node): InlineNode[] {
   }
 
   return Array.from(node.childNodes).flatMap((child) =>
-    collectInlineNodes(child)
+    collectInlineNodes(child, baseUrl)
   );
+}
+
+function resolveUrl(value: string, baseUrl: string): string {
+  try {
+    return new URL(value, baseUrl).toString();
+  } catch {
+    return value;
+  }
 }
