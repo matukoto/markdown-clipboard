@@ -40,6 +40,21 @@ pnpm
 
 biome を使う
 
+## 現在の対応範囲
+
+- 対応済み要素: 見出し（h1-h6）、段落、箇条書き（ul/ol）、リンク、画像
+- ノイズ除去: `nav`, `header`, `footer`, `aside`, 広告系クラス（`.ad` など）を抽出前に除外
+- 出力形式: 先頭に `Source: <URL>` を付けた Markdown をクリップボードへコピー
+- 実行トリガー: ポップアップのボタン、および `Cmd/Ctrl + Shift + Y` ショートカット
+- URL解決: リンク・画像の相対URLはページURL基準で絶対URLに変換
+
+## 既知の制約
+
+- テーブル、コードブロック、脚注などの高度な Markdown 要素は未対応
+- 入れ子リストはフラット化され、階層構造は保持されない
+- サイト固有レイアウトでは本文抽出が過不足になる場合がある（抽出ルールの追加で調整可能）
+- クリップボード権限やページ制約によりコピーに失敗する場合がある
+
 ## 参考
 
 * [eetann/url-copy-helper: You can copy URL and Title in several formats.](https://github.com/eetann/url-copy-helper)
