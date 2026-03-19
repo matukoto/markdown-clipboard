@@ -8,6 +8,7 @@ import {
 } from "../lib/clip/messages";
 
 const BADGE_RESET_DELAY_MS = 3000;
+const MISSING_CONTENT_SCRIPT_ERROR_MESSAGE = "Receiving end does not exist";
 let badgeResetTimeoutId: ReturnType<typeof setTimeout> | undefined;
 
 export default defineBackground(() => {
@@ -35,9 +36,26 @@ export default defineBackground(() => {
 async function clipActiveTab(): Promise<ClipResponse> {
   try {
     const tabId = await getActiveTabId();
-    const response = (await browser.tabs.sendMessage(tabId, {
-      type: CLIP_PAGE_MESSAGE,
-    })) as ClipResponse | undefined;
+    let response: ClipResponse | undefined;
+
+    try {
+      response = (await browser.tabs.sendMessage(tabId, {
+        type: CLIP_PAGE_MESSAGE,
+      })) as ClipResponse | undefined;
+    } catch (error) {
+      if (!isMissingContentScriptError(error)) {
+        throw error;
+      }
+
+      // Content script is not injected yet. Inject it using activeTab + scripting permissions.
+      await browser.scripting.executeScript({
+        target: { tabId },
+        files: ["/content-scripts/content.js"],
+      });
+      response = (await browser.tabs.sendMessage(tabId, {
+        type: CLIP_PAGE_MESSAGE,
+      })) as ClipResponse | undefined;
+    }
 
     if (response?.success) {
       await setBadge("✓", "#16a34a");
@@ -61,6 +79,13 @@ async function clipActiveTab(): Promise<ClipResponse> {
         : "Failed to clip the active tab.",
     };
   }
+}
+
+function isMissingContentScriptError(error: unknown): boolean {
+  return (
+    isInstanceOf(Error)(error) &&
+    error.message.includes(MISSING_CONTENT_SCRIPT_ERROR_MESSAGE)
+  );
 }
 
 async function getActiveTabId(): Promise<number> {

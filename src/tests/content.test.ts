@@ -76,14 +76,10 @@ describe("content entrypoint", () => {
 
     const listener = runtimeMessageListener;
     let keepChannelOpen: boolean | undefined;
-    const response = await new Promise<ClipResponse | undefined>((resolve) => {
+    const response = await new Promise<ClipResponse>((resolve) => {
       keepChannelOpen = listener(message, undefined, (response) => {
         resolve(response);
       });
-
-      if (keepChannelOpen !== true) {
-        resolve(undefined);
-      }
     });
 
     return { keepChannelOpen, response };

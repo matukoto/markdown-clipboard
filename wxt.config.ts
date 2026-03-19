@@ -8,7 +8,7 @@ export default defineConfig({
     default_locale: "en",
     name: "__MSG_extName__",
     description: "__MSG_extDescription__",
-    permissions: ["tabs", "storage", "clipboardWrite"],
+    permissions: ["activeTab", "scripting", "storage", "clipboardWrite"],
     action: {
       default_title: "__MSG_actionDefaultTitle__",
     },
