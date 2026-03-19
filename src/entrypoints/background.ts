@@ -1,3 +1,75 @@
+import {
+  CLIP_ACTIVE_TAB_MESSAGE,
+  CLIP_PAGE_MESSAGE,
+  type ClipResponse,
+  isClipActiveTabRequest,
+} from "../lib/clip/messages";
+
+const BADGE_RESET_DELAY_MS = 3000;
+
 export default defineBackground(() => {
-  console.log("Hello background!", { id: browser.runtime.id });
+  browser.runtime.onMessage.addListener((message: unknown) => {
+    if (!isClipActiveTabRequest(message)) {
+      return undefined;
+    }
+
+    return clipActiveTab();
+  });
+
+  browser.commands.onCommand.addListener((command) => {
+    if (command !== CLIP_ACTIVE_TAB_MESSAGE) {
+      return;
+    }
+
+    void clipActiveTab();
+  });
 });
+
+async function clipActiveTab(): Promise<ClipResponse> {
+  try {
+    const tabId = await getActiveTabId();
+    const response = (await browser.tabs.sendMessage(tabId, {
+      type: CLIP_PAGE_MESSAGE,
+    })) as ClipResponse;
+
+    if (response.success) {
+      await setBadge("OK", "#16a34a");
+      return response;
+    }
+
+    await setBadge("ERR", "#dc2626");
+    return response;
+  } catch (error) {
+    await setBadge("ERR", "#dc2626");
+
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to clip the active tab.",
+    };
+  }
+}
+
+async function getActiveTabId(): Promise<number> {
+  const [activeTab] = await browser.tabs.query({
+    active: true,
+    currentWindow: true,
+  });
+
+  if (activeTab?.id === undefined) {
+    throw new Error("No active tab is available to clip.");
+  }
+
+  return activeTab.id;
+}
+
+async function setBadge(text: string, color: string): Promise<void> {
+  await browser.action.setBadgeBackgroundColor({ color });
+  await browser.action.setBadgeText({ text });
+
+  setTimeout(() => {
+    void browser.action.setBadgeText({ text: "" });
+  }, BADGE_RESET_DELAY_MS);
+}
