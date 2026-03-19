@@ -1,4 +1,5 @@
 import TurndownService from "turndown";
+import { gfm } from "turndown-plugin-gfm";
 
 export function renderMarkdown(contentHtml: string): string {
   if (contentHtml.trim() === "") {
@@ -10,6 +11,7 @@ export function renderMarkdown(contentHtml: string): string {
     bulletListMarker: "-",
     codeBlockStyle: "fenced",
   });
+  turndownService.use(gfm);
 
   return turndownService
     .turndown(contentHtml)
