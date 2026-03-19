@@ -33,6 +33,7 @@
   },
   "dependencies": {
     "@mozilla/readability": "^0.6.0",
-    "turndown": "^7.2.2"
+    "turndown": "^7.2.2",
+    "unknownutil": "^3.18.1"
   }
 }

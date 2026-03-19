@@ -14,6 +14,9 @@ importers:
       turndown:
         specifier: ^7.2.2
         version: 7.2.2
+      unknownutil:
+        specifier: ^3.18.1
+        version: 3.18.1
     devDependencies:
       '@biomejs/biome':
         specifier: ^2.4.8
@@ -1926,6 +1929,9 @@ packages:
   universalify@2.0.1:
     resolution: {integrity: sha512-gptHNQghINnc/vTGIk0SOFGFNXw7JVrlRUtConJRlvaw6DuX0wO5Jeko9sWrMBhh+PsYAZ7oXAiOnf/UKogyiw==}
     engines: {node: '>= 10.0.0'}
+
+  unknownutil@3.18.1:
+    resolution: {integrity: sha512-xUxVwGuRfA3TqGwiulvZ8WHR4zTs/u9rN4ACqjVPVU86dBRkerVdwYb4o0c+hfJjsUufNO5pL0bjfB9UELJVOQ==}
 
   unplugin-utils@0.3.1:
     resolution: {integrity: sha512-5lWVjgi6vuHhJ526bI4nlCOmkCIF3nnfXkCMDeMJrtdvxTs6ZFCM8oNufGTsDbKv/tJ/xj8RpvXjRuPBZJuJog==}
@@ -3848,6 +3854,8 @@ snapshots:
       unplugin-utils: 0.3.1
 
   universalify@2.0.1: {}
+
+  unknownutil@3.18.1: {}
 
   unplugin-utils@0.3.1:
     dependencies:

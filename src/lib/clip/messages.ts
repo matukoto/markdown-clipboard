@@ -1,3 +1,5 @@
+import { isLiteralOf, isObjectOf } from "unknownutil";
+
 import type { ClipResult } from "./types";
 
 export const CLIP_ACTIVE_TAB_MESSAGE = "clip-active-tab";
@@ -11,14 +13,22 @@ export interface ClipPageRequest {
   type: typeof CLIP_PAGE_MESSAGE;
 }
 
+const isClipActiveTabRequestMessage = isObjectOf({
+  type: isLiteralOf(CLIP_ACTIVE_TAB_MESSAGE),
+});
+
+const isClipPageRequestMessage = isObjectOf({
+  type: isLiteralOf(CLIP_PAGE_MESSAGE),
+});
+
 export function isClipActiveTabRequest(
   value: unknown
 ): value is ClipActiveTabRequest {
-  return hasMessageType(value, CLIP_ACTIVE_TAB_MESSAGE);
+  return isClipActiveTabRequestMessage(value);
 }
 
 export function isClipPageRequest(value: unknown): value is ClipPageRequest {
-  return hasMessageType(value, CLIP_PAGE_MESSAGE);
+  return isClipPageRequestMessage(value);
 }
 
 export type ClipResponse =
@@ -30,12 +40,3 @@ export type ClipResponse =
       success: false;
       error: string;
     };
-
-function hasMessageType(value: unknown, expectedType: string): boolean {
-  if (typeof value !== "object" || value === null || !("type" in value)) {
-    return false;
-  }
-
-  const message = value as { type?: unknown };
-  return typeof message.type === "string" && message.type === expectedType;
-}
