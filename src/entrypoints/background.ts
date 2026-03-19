@@ -27,6 +27,20 @@ export default defineBackground(() => {
   browser.action.onClicked.addListener(() => {
     void clipActiveTab();
   });
+
+  browser.runtime.onInstalled.addListener(() => {
+    browser.contextMenus.create({
+      id: "open-options",
+      title: "設定を開く",
+      contexts: ["action"],
+    });
+  });
+
+  browser.contextMenus.onClicked.addListener((info) => {
+    if (info.menuItemId === "open-options") {
+      void browser.runtime.openOptionsPage();
+    }
+  });
 });
 
 async function clipActiveTab(): Promise<ClipResponse> {

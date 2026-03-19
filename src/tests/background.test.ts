@@ -56,6 +56,10 @@ describe("background entrypoint", () => {
             runtimeMessageListener = listener;
           },
         },
+        onInstalled: {
+          addListener: vi.fn(),
+        },
+        openOptionsPage: vi.fn(),
       },
       commands: {
         onCommand: {
@@ -76,6 +80,12 @@ describe("background entrypoint", () => {
         },
         setBadgeBackgroundColor,
         setBadgeText,
+      },
+      contextMenus: {
+        create: vi.fn(),
+        onClicked: {
+          addListener: vi.fn(),
+        },
       },
     };
 
