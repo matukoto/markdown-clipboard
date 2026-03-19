@@ -5,13 +5,7 @@
     getClipContentOptions,
     setClipContentOptions,
   } from "../../lib/clip/settings";
-
-  type I18nMessageName = Parameters<typeof browser.i18n.getMessage>[0];
-
-  function t(key: I18nMessageName, fallback: string): string {
-    const message = browser.i18n.getMessage(key);
-    return message === "" ? fallback : message;
-  }
+  import { t } from "../../lib/i18n";
 
   let includeLinks = $state(false);
   let includeImages = $state(false);

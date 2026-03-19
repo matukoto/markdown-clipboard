@@ -6,16 +6,10 @@ import {
   type ClipResponse,
   isClipActiveTabRequest,
 } from "../lib/clip/messages";
+import { t } from "../lib/i18n";
 
 const BADGE_RESET_DELAY_MS = 3000;
 let badgeResetTimeoutId: ReturnType<typeof setTimeout> | undefined;
-
-type I18nMessageName = Parameters<typeof browser.i18n.getMessage>[0];
-
-function getMessage(messageName: I18nMessageName, fallback: string): string {
-  const message = browser.i18n.getMessage(messageName);
-  return message === "" ? fallback : message;
-}
 
 export default defineBackground(() => {
   browser.runtime.onMessage.addListener((message: unknown) => {
@@ -41,7 +35,7 @@ export default defineBackground(() => {
   browser.runtime.onInstalled.addListener(() => {
     browser.contextMenus.create({
       id: "open-options",
-      title: getMessage("openOptionsMenu", "Open settings"),
+      title: t("openOptionsMenu", "Open settings"),
       contexts: ["action"],
     });
   });
