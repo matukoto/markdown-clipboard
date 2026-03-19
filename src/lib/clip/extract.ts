@@ -69,7 +69,7 @@ function selectFallbackContentHtml(document: Document): string {
   ];
 
   for (const candidate of candidates) {
-    if (!isInstanceOf(HTMLElement)(candidate)) {
+    if (candidate === null) {
       continue;
     }
 
@@ -141,7 +141,7 @@ function unwrapElement(element: Element): void {
 function setBaseUrl(document: Document, baseUrl: string): void {
   let base = document.querySelector("base");
 
-  if (!isInstanceOf(HTMLBaseElement)(base)) {
+  if (base === null) {
     base = document.createElement("base");
     document.head.prepend(base);
   }
