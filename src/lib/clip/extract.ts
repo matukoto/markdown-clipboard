@@ -1,366 +1,144 @@
-import { collapseWhitespace, normalizeText } from "./text";
-import type {
-  ClipBlock,
-  ClipContentOptions,
-  ClipDocument,
-  ClipMetadata,
-  InlineNode,
-} from "./types";
+import { Readability } from "@mozilla/readability";
 
-const ROOT_SELECTORS = [
-  "article",
-  "main",
-  "[role='main']",
-  ".post-content",
-  ".entry-content",
-  ".article-body",
-];
+import { normalizeText } from "./text";
+import type { ClipContentOptions, ExtractedContent } from "./types";
 
 const NOISE_SELECTOR =
   "nav, header, footer, aside, script, style, noscript, form, button, iframe, template, [hidden], [aria-hidden='true'], .ad, .ads, .advertisement, .breadcrumb, .share, .social";
 
-const BLOCK_TAGS = new Set([
-  "article",
-  "blockquote",
-  "body",
-  "div",
-  "h1",
-  "h2",
-  "h3",
-  "h4",
-  "h5",
-  "h6",
-  "li",
-  "main",
-  "ol",
-  "p",
-  "section",
-  "ul",
-]);
+const DEFAULT_CLIP_CONTENT_OPTIONS: ClipContentOptions = {
+  includeLinks: true,
+  includeImages: true,
+};
 
-export function extractClipDocument(
+export function extractReadableContent(
   document: Document,
-  metadata: ClipMetadata,
-  options: ClipContentOptions = {
-    includeLinks: true,
-    includeImages: true,
-  }
-): ClipDocument {
-  const primaryRoot = selectRoot(document);
-  const primaryBlocks = extractBlocksFromRoot(
-    primaryRoot,
-    metadata.url,
-    options
-  );
+  baseUrl: string,
+  options: ClipContentOptions = DEFAULT_CLIP_CONTENT_OPTIONS
+): ExtractedContent {
+  const clonedDocument = document.cloneNode(true) as Document;
+  setBaseUrl(clonedDocument, baseUrl);
+  stripObviousNoise(clonedDocument);
+  const article = new Readability(clonedDocument).parse();
 
-  if (primaryBlocks.length > 0) {
-    return {
-      metadata,
-      blocks: primaryBlocks,
-    };
+  if (article === null) {
+    return emptyExtractedContent();
+  }
+
+  if (article.content === null || article.content === undefined) {
+    return emptyExtractedContent();
+  }
+
+  const extractedDocument = document.implementation.createHTMLDocument(
+    article.title || document.title
+  );
+  extractedDocument.body.innerHTML = article.content;
+  prependTitleHeading(extractedDocument.body, article.title || document.title);
+  postProcessExtractedContent(extractedDocument.body, baseUrl, options);
+
+  const contentHtml = extractedDocument.body.innerHTML.trim();
+  const textContent = normalizeText(extractedDocument.body.textContent ?? "");
+
+  if (contentHtml === "" || textContent === "") {
+    return emptyExtractedContent();
   }
 
   return {
-    metadata,
-    blocks: extractBlocksFromRoot(document.body, metadata.url, options),
+    title: normalizeText(article.title || document.title),
+    contentHtml,
+    textContent,
   };
 }
 
-function selectRoot(document: Document): HTMLElement {
-  const candidates = ROOT_SELECTORS.map((selector) =>
-    document.querySelector(selector)
-  )
-    .filter((element): element is HTMLElement => element instanceof HTMLElement)
-    .filter((element) => normalizeText(element.textContent ?? "").length > 0);
-
-  if (candidates.length === 0) {
-    return document.body;
-  }
-
-  return candidates.sort((left, right) => {
-    return (
-      normalizeText(right.textContent ?? "").length -
-      normalizeText(left.textContent ?? "").length
-    );
-  })[0];
-}
-
-function extractBlocksFromRoot(
+function postProcessExtractedContent(
   root: HTMLElement,
   baseUrl: string,
   options: ClipContentOptions
-): ClipBlock[] {
-  const preparedRoot = root.cloneNode(true) as HTMLElement;
-  preparedRoot.querySelectorAll(NOISE_SELECTOR).forEach((node) => {
-    node.remove();
-  });
-
-  return Array.from(preparedRoot.childNodes).flatMap((node) =>
-    extractBlocks(node, baseUrl, options)
-  );
-}
-
-function extractBlocks(
-  node: Node,
-  baseUrl: string,
-  options: ClipContentOptions
-): ClipBlock[] {
-  if (node.nodeType === Node.TEXT_NODE) {
-    const text = normalizeText(node.textContent ?? "");
-
-    if (text === "") {
-      return [];
-    }
-
-    return [
-      {
-        type: "paragraph",
-        children: [{ type: "text", text }],
-      },
-    ];
-  }
-
-  if (!(node instanceof HTMLElement)) {
-    return [];
-  }
-
-  const tagName = node.tagName.toLowerCase();
-
-  if (
-    tagName === "h1" ||
-    tagName === "h2" ||
-    tagName === "h3" ||
-    tagName === "h4" ||
-    tagName === "h5" ||
-    tagName === "h6"
-  ) {
-    const children = extractInlineNodes(node, baseUrl, options);
-
-    if (children.length === 0) {
-      return [];
-    }
-
-    return [
-      {
-        type: "heading",
-        level: Number(tagName.slice(1)) as 1 | 2 | 3 | 4 | 5 | 6,
-        children,
-      },
-    ];
-  }
-
-  if (tagName === "p") {
-    const children = extractInlineNodes(node, baseUrl, options);
-
-    if (children.length === 0) {
-      return [];
-    }
-
-    return [
-      {
-        type: "paragraph",
-        children,
-      },
-    ];
-  }
-
-  if (tagName === "ul" || tagName === "ol") {
-    const items = Array.from(node.children)
-      .filter((child) => child instanceof HTMLLIElement)
-      .map((item) => extractListItem(item, baseUrl, options))
-      .filter((item) => item.length > 0);
-
-    if (items.length === 0) {
-      return [];
-    }
-
-    return [
-      {
-        type: "list",
-        ordered: tagName === "ol",
-        items,
-      },
-    ];
-  }
-
-  if (tagName === "img") {
-    if (!options.includeImages) {
-      return [];
-    }
-
-    const src = node.getAttribute("src");
-
-    if (src === null || src === "") {
-      return [];
-    }
-
-    return [
-      {
-        type: "image",
-        alt: normalizeText(node.getAttribute("alt") ?? ""),
-        src: resolveUrl(src, baseUrl),
-      },
-    ];
-  }
-
-  if (hasBlockChildren(node)) {
-    return Array.from(node.childNodes).flatMap((child) =>
-      extractBlocks(child, baseUrl, options)
-    );
-  }
-
-  const children = extractInlineNodes(node, baseUrl, options);
-
-  if (children.length === 0) {
-    return [];
-  }
-
-  return [
-    {
-      type: "paragraph",
-      children,
-    },
-  ];
-}
-
-function hasBlockChildren(element: HTMLElement): boolean {
-  return Array.from(element.children).some((child) =>
-    BLOCK_TAGS.has(child.tagName.toLowerCase())
-  );
-}
-
-function extractListItem(
-  item: HTMLLIElement,
-  baseUrl: string,
-  options: ClipContentOptions
-): InlineNode[] {
-  const clone = item.cloneNode(true) as HTMLLIElement;
-  clone.querySelectorAll("ul, ol").forEach((node) => {
-    node.remove();
-  });
-  return extractInlineNodes(clone, baseUrl, options);
-}
-
-function extractInlineNodes(
-  node: Node,
-  baseUrl: string,
-  options: ClipContentOptions
-): InlineNode[] {
-  const collected = collectInlineNodes(node, baseUrl, options);
-  const merged: InlineNode[] = [];
-
-  for (const entry of collected) {
-    if (entry.type === "text") {
-      const text = collapseWhitespace(entry.text);
-
-      if (text === "") {
-        continue;
-      }
-
-      const previous = merged.at(-1);
-
-      if (previous?.type === "text") {
-        previous.text += text;
-        continue;
-      }
-
-      merged.push({ type: "text", text });
-      continue;
-    }
-
-    merged.push(entry);
-  }
-
-  const first = merged[0];
-
-  if (first?.type === "text") {
-    first.text = first.text.trimStart();
-  }
-
-  const last = merged.at(-1);
-
-  if (last?.type === "text") {
-    last.text = last.text.trimEnd();
-  }
-
-  return merged.filter((entry) => entry.type !== "text" || entry.text !== "");
-}
-
-function collectInlineNodes(
-  node: Node,
-  baseUrl: string,
-  options: ClipContentOptions
-): InlineNode[] {
-  if (node.nodeType === Node.TEXT_NODE) {
-    return [
-      {
-        type: "text",
-        text: node.textContent ?? "",
-      },
-    ];
-  }
-
-  if (!(node instanceof HTMLElement)) {
-    return [];
-  }
-
-  if (node.matches(NOISE_SELECTOR)) {
-    return [];
-  }
-
-  const tagName = node.tagName.toLowerCase();
-
-  if (tagName === "a") {
-    const href = node.getAttribute("href");
+): void {
+  root.querySelectorAll("a").forEach((anchor) => {
+    const href = anchor.getAttribute("href");
 
     if (href === null || href === "") {
-      return Array.from(node.childNodes).flatMap((child) =>
-        collectInlineNodes(child, baseUrl, options)
-      );
+      if (!options.includeLinks) {
+        anchor.replaceWith(anchor.textContent ?? "");
+      }
+      return;
     }
 
     if (!options.includeLinks) {
-      return Array.from(node.childNodes).flatMap((child) =>
-        collectInlineNodes(child, baseUrl, options)
-      );
+      anchor.replaceWith(anchor.textContent ?? "");
+      return;
     }
 
-    return [
-      {
-        type: "link",
-        text: normalizeText(node.textContent ?? href) || href,
-        href: resolveUrl(href, baseUrl),
-      },
-    ];
-  }
+    anchor.setAttribute("href", resolveUrl(href, baseUrl));
+  });
 
-  if (tagName === "img") {
+  root.querySelectorAll("img").forEach((image) => {
     if (!options.includeImages) {
-      return [];
+      image.remove();
+      return;
     }
 
-    const src = node.getAttribute("src");
+    const src = image.getAttribute("src");
 
     if (src === null || src === "") {
-      return [];
+      image.remove();
+      return;
     }
 
-    return [
-      {
-        type: "image",
-        alt: normalizeText(node.getAttribute("alt") ?? ""),
-        src: resolveUrl(src, baseUrl),
-      },
-    ];
+    image.setAttribute("src", resolveUrl(src, baseUrl));
+  });
+
+  root.querySelectorAll("script, style, noscript").forEach((element) => {
+    element.remove();
+  });
+}
+
+function setBaseUrl(document: Document, baseUrl: string): void {
+  let base = document.querySelector("base");
+
+  if (!(base instanceof HTMLBaseElement)) {
+    base = document.createElement("base");
+    document.head.prepend(base);
   }
 
-  if (tagName === "br") {
-    return [{ type: "text", text: " " }];
+  base.setAttribute("href", baseUrl);
+}
+
+function stripObviousNoise(document: Document): void {
+  document.querySelectorAll(NOISE_SELECTOR).forEach((element) => {
+    element.remove();
+  });
+}
+
+function prependTitleHeading(root: HTMLElement, title: string): void {
+  const normalizedTitle = normalizeText(title);
+
+  if (normalizedTitle === "") {
+    return;
   }
 
-  return Array.from(node.childNodes).flatMap((child) =>
-    collectInlineNodes(child, baseUrl, options)
-  );
+  const existingHeading = root.querySelector("h1, h2");
+
+  if (existingHeading?.textContent !== undefined) {
+    const headingText = normalizeText(existingHeading.textContent);
+
+    if (headingText === normalizedTitle) {
+      return;
+    }
+  }
+
+  const heading = root.ownerDocument.createElement("h1");
+  heading.textContent = normalizedTitle;
+  root.prepend(heading);
+}
+
+function emptyExtractedContent(): ExtractedContent {
+  return {
+    title: "",
+    contentHtml: "",
+    textContent: "",
+  };
 }
 
 function resolveUrl(value: string, baseUrl: string): string {

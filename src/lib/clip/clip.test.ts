@@ -20,7 +20,7 @@ describe("createClipMetadata の振る舞い", () => {
 });
 
 describe("clipPage の振る舞い", () => {
-  it("現在の document から Markdown を組み立てる", () => {
+  it("現在の document を Readability と Turndown でクリップ結果に変換する", () => {
     document.title = "Markdown Web Clipper";
     document.body.innerHTML = `
       <main>
@@ -31,33 +31,22 @@ describe("clipPage の振る舞い", () => {
       </main>
     `;
 
-    expect(
-      clipPage(
-        document,
-        "https://example.com/posts/clipper",
-        DEFAULT_CLIP_CONTENT_OPTIONS,
-        "2026-03-19T00:00:00.000Z"
-      )
-    ).toEqual({
-      metadata: {
-        title: "Markdown Web Clipper",
-        url: "https://example.com/posts/clipper",
-        clippedAt: "2026-03-19T00:00:00.000Z",
-      },
-      blocks: [
-        {
-          type: "heading",
-          level: 1,
-          children: [{ type: "text", text: "Markdown Web Clipper" }],
-        },
-        {
-          type: "paragraph",
-          children: [
-            { type: "text", text: "Save the current page as Markdown." },
-          ],
-        },
-      ],
-      markdown: "# Markdown Web Clipper\n\nSave the current page as Markdown.",
+    const result = clipPage(
+      document,
+      "https://example.com/posts/clipper",
+      DEFAULT_CLIP_CONTENT_OPTIONS,
+      "2026-03-19T00:00:00.000Z"
+    );
+
+    expect(result.metadata).toEqual({
+      title: "Markdown Web Clipper",
+      url: "https://example.com/posts/clipper",
+      clippedAt: "2026-03-19T00:00:00.000Z",
     });
+    expect(result.contentHtml).toContain("<h1>Markdown Web Clipper</h1>");
+    expect(result.textContent).toContain("Save the current page as Markdown.");
+    expect(result.markdown).toBe(
+      "# Markdown Web Clipper\n\nSave the current page as Markdown."
+    );
   });
 });

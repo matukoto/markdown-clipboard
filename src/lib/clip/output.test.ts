@@ -9,7 +9,9 @@ const clipResult: ClipResult = {
     url: "https://example.com/posts/clipper",
     clippedAt: "2026-03-19T00:00:00.000Z",
   },
-  blocks: [],
+  contentHtml:
+    "<h1>Markdown Web Clipper</h1><p>Save the current page as Markdown.</p>",
+  textContent: "Markdown Web Clipper Save the current page as Markdown.",
   markdown: "# Markdown Web Clipper\n\nSave the current page as Markdown.",
 };
 

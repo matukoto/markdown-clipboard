@@ -1,4 +1,4 @@
-import { extractClipDocument } from "./extract";
+import { extractReadableContent } from "./extract";
 import { renderMarkdown } from "./markdown";
 import { normalizeText } from "./text";
 import type { ClipContentOptions, ClipMetadata, ClipResult } from "./types";
@@ -29,15 +29,17 @@ export function clipPage(
   options: ClipContentOptions,
   clippedAt?: string
 ): ClipResult {
+  const extractedContent = extractReadableContent(document, url, options);
   const metadata = createClipMetadata({
-    title: document.title,
+    title: extractedContent.title || document.title,
     url,
     clippedAt,
   });
-  const clipDocument = extractClipDocument(document, metadata, options);
 
   return {
-    ...clipDocument,
-    markdown: renderMarkdown(clipDocument),
+    metadata,
+    contentHtml: extractedContent.contentHtml,
+    textContent: extractedContent.textContent,
+    markdown: renderMarkdown(extractedContent.contentHtml),
   };
 }
