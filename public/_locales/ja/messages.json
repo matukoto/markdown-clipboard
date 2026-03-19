@@ -1,0 +1,71 @@
+{
+  "extName": {
+    "message": "Markdown Web Clipper"
+  },
+  "extDescription": {
+    "message": "現在のページの本文を抽出して Markdown に変換し、クリップボードへコピーします。"
+  },
+  "actionDefaultTitle": {
+    "message": "Markdown Web Clipper"
+  },
+  "commandClipActiveTabDescription": {
+    "message": "現在のページを Markdown としてコピー"
+  },
+  "openOptionsMenu": {
+    "message": "設定を開く"
+  },
+  "optionsEyebrow": {
+    "message": "Markdown Web Clipper"
+  },
+  "optionsHeading": {
+    "message": "設定"
+  },
+  "optionsDescription": {
+    "message": "拡張機能アイコンのクリック、またはショートカットで現在のページを Markdown としてコピーします。この画面ではクリップ時の出力設定を変更できます。"
+  },
+  "optionsClipSettingsAriaLabel": {
+    "message": "クリップ設定"
+  },
+  "optionsCopySettingsHeading": {
+    "message": "コピー設定"
+  },
+  "optionsIncludeLinksLabel": {
+    "message": "リンクを Markdown リンクとして残す"
+  },
+  "optionsIncludeImagesLabel": {
+    "message": "画像を Markdown 画像として残す"
+  },
+  "optionsHint": {
+    "message": "どちらもオフにすると、リンクや画像はできるだけ本文テキスト寄りの出力になります。"
+  },
+  "optionsHowToAriaLabel": {
+    "message": "使い方"
+  },
+  "optionsHowToHeading": {
+    "message": "使い方"
+  },
+  "optionsHowToClickIcon": {
+    "message": "ツールバーの拡張機能アイコンをクリックすると、現在のページをそのままコピーします。"
+  },
+  "optionsHowToShortcutLead": {
+    "message": "ショートカットは"
+  },
+  "optionsHowToShortcutTail": {
+    "message": "です。"
+  },
+  "optionsHowToSourceLead": {
+    "message": "コピー結果には先頭に"
+  },
+  "optionsHowToSourceTail": {
+    "message": "が付きます。"
+  },
+  "optionsLoadFailed": {
+    "message": "設定の読み込みに失敗しました。"
+  },
+  "optionsSaveSuccess": {
+    "message": "設定を保存しました。"
+  },
+  "optionsSaveFailed": {
+    "message": "設定の保存に失敗しました。"
+  }
+}

@@ -6,6 +6,13 @@
     setClipContentOptions,
   } from "../../lib/clip/settings";
 
+  type I18nMessageName = Parameters<typeof browser.i18n.getMessage>[0];
+
+  function t(key: I18nMessageName, fallback: string): string {
+    const message = browser.i18n.getMessage(key);
+    return message === "" ? fallback : message;
+  }
+
   let includeLinks = $state(false);
   let includeImages = $state(false);
   let isLoading = $state(true);
@@ -20,7 +27,7 @@
     } catch (error) {
       errorMessage = isInstanceOf(Error)(error)
         ? error.message
-        : "設定の読み込みに失敗しました。";
+        : t("optionsLoadFailed", "Failed to load settings.");
     } finally {
       isLoading = false;
     }
@@ -37,11 +44,11 @@
       });
       includeLinks = next.includeLinks;
       includeImages = next.includeImages;
-      statusMessage = "設定を保存しました。";
+      statusMessage = t("optionsSaveSuccess", "Settings saved.");
     } catch (error) {
       errorMessage = isInstanceOf(Error)(error)
         ? error.message
-        : "設定の保存に失敗しました。";
+        : t("optionsSaveFailed", "Failed to save settings.");
     }
   }
 
@@ -60,16 +67,21 @@
 
 <main class="page">
   <header class="hero">
-    <p class="eyebrow">Markdown Web Clipper</p>
-    <h1>設定</h1>
+    <p class="eyebrow">{t("optionsEyebrow", "Markdown Web Clipper")}</p>
+    <h1>{t("optionsHeading", "Settings")}</h1>
     <p class="description">
-      拡張機能アイコンのクリック、またはショートカットで現在のページを Markdown
-      としてコピーします。この画面ではクリップ時の出力設定を変更できます。
+      {t(
+        "optionsDescription",
+        "Click the extension icon or use the shortcut to copy the current page as Markdown. On this page, you can change the clip output options."
+      )}
     </p>
   </header>
 
-  <section class="card" aria-label="クリップ設定">
-    <h2>コピー設定</h2>
+  <section
+    class="card"
+    aria-label={t("optionsClipSettingsAriaLabel", "Clip settings")}
+  >
+    <h2>{t("optionsCopySettingsHeading", "Copy settings")}</h2>
 
     <label class="toggle">
       <input
@@ -78,7 +90,9 @@
         onchange={handleIncludeLinksChange}
         disabled={isLoading}
       >
-      <span>リンクを Markdown リンクとして残す</span>
+      <span
+        >{t("optionsIncludeLinksLabel", "Keep links as Markdown links")}</span
+      >
     </label>
 
     <label class="toggle">
@@ -88,22 +102,40 @@
         onchange={handleIncludeImagesChange}
         disabled={isLoading}
       >
-      <span>画像を Markdown 画像として残す</span>
+      <span
+        >{t("optionsIncludeImagesLabel", "Keep images as Markdown images")}</span
+      >
     </label>
 
     <p class="hint">
-      どちらもオフにすると、リンクや画像はできるだけ本文テキスト寄りの出力になります。
+      {t(
+        "optionsHint",
+        "If both are off, links and images are converted to plain body text as much as possible."
+      )}
     </p>
   </section>
 
-  <section class="card" aria-label="使い方">
-    <h2>使い方</h2>
+  <section class="card" aria-label={t("optionsHowToAriaLabel", "How to use")}>
+    <h2>{t("optionsHowToHeading", "How to use")}</h2>
     <ul>
       <li>
-        ツールバーの拡張機能アイコンをクリックすると、現在のページをそのままコピーします。
+        {t(
+          "optionsHowToClickIcon",
+          "Click the extension icon in the toolbar to copy the current page."
+        )}
       </li>
-      <li>ショートカットは <code>Cmd/Ctrl + Shift + Y</code> です。</li>
-      <li>コピー結果には先頭に <code>Source: URL</code> が付きます。</li>
+      <li>
+        {t("optionsHowToShortcutLead", "Shortcut:")}
+        {" "}
+        <code>Cmd/Ctrl + Shift + Y</code>
+        {t("optionsHowToShortcutTail", ".")}
+      </li>
+      <li>
+        {t("optionsHowToSourceLead", "Copied text starts with")}
+        {" "}
+        <code>Source: URL</code>
+        {t("optionsHowToSourceTail", ".")}
+      </li>
     </ul>
   </section>
 

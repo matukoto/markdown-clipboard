@@ -1,0 +1,71 @@
+{
+  "extName": {
+    "message": "Markdown Web Clipper"
+  },
+  "extDescription": {
+    "message": "Extract the main content of the current page, convert it to Markdown, and copy it to the clipboard."
+  },
+  "actionDefaultTitle": {
+    "message": "Markdown Web Clipper"
+  },
+  "commandClipActiveTabDescription": {
+    "message": "Copy the current page as Markdown"
+  },
+  "openOptionsMenu": {
+    "message": "Open settings"
+  },
+  "optionsEyebrow": {
+    "message": "Markdown Web Clipper"
+  },
+  "optionsHeading": {
+    "message": "Settings"
+  },
+  "optionsDescription": {
+    "message": "Click the extension icon or use the shortcut to copy the current page as Markdown. On this page, you can change the clip output options."
+  },
+  "optionsClipSettingsAriaLabel": {
+    "message": "Clip settings"
+  },
+  "optionsCopySettingsHeading": {
+    "message": "Copy settings"
+  },
+  "optionsIncludeLinksLabel": {
+    "message": "Keep links as Markdown links"
+  },
+  "optionsIncludeImagesLabel": {
+    "message": "Keep images as Markdown images"
+  },
+  "optionsHint": {
+    "message": "If both are off, links and images are converted to plain body text as much as possible."
+  },
+  "optionsHowToAriaLabel": {
+    "message": "How to use"
+  },
+  "optionsHowToHeading": {
+    "message": "How to use"
+  },
+  "optionsHowToClickIcon": {
+    "message": "Click the extension icon in the toolbar to copy the current page."
+  },
+  "optionsHowToShortcutLead": {
+    "message": "Shortcut:"
+  },
+  "optionsHowToShortcutTail": {
+    "message": "."
+  },
+  "optionsHowToSourceLead": {
+    "message": "Copied text starts with"
+  },
+  "optionsHowToSourceTail": {
+    "message": "."
+  },
+  "optionsLoadFailed": {
+    "message": "Failed to load settings."
+  },
+  "optionsSaveSuccess": {
+    "message": "Settings saved."
+  },
+  "optionsSaveFailed": {
+    "message": "Failed to save settings."
+  }
+}

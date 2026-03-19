@@ -10,6 +10,13 @@ import {
 const BADGE_RESET_DELAY_MS = 3000;
 let badgeResetTimeoutId: ReturnType<typeof setTimeout> | undefined;
 
+type I18nMessageName = Parameters<typeof browser.i18n.getMessage>[0];
+
+function getMessage(messageName: I18nMessageName, fallback: string): string {
+  const message = browser.i18n.getMessage(messageName);
+  return message === "" ? fallback : message;
+}
+
 export default defineBackground(() => {
   browser.runtime.onMessage.addListener((message: unknown) => {
     if (!isClipActiveTabRequest(message)) {
@@ -34,7 +41,7 @@ export default defineBackground(() => {
   browser.runtime.onInstalled.addListener(() => {
     browser.contextMenus.create({
       id: "open-options",
-      title: "設定を開く",
+      title: getMessage("openOptionsMenu", "Open settings"),
       contexts: ["action"],
     });
   });
