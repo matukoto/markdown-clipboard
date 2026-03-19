@@ -79,7 +79,7 @@ describe("background entrypoint", () => {
     vi.clearAllMocks();
   });
 
-  it("クリップ要求を受けると active tab の内容を処理して OK バッジを出す", async () => {
+  it("クリップ要求を受けると active tab の内容を処理して成功バッジを出す", async () => {
     if (runtimeMessageListener === undefined) {
       throw new Error("runtime message listener is not registered");
     }
@@ -97,7 +97,7 @@ describe("background entrypoint", () => {
     });
     expect(response.success).toBe(true);
     expect(setBadgeBackgroundColor).toHaveBeenCalledWith({ color: "#16a34a" });
-    expect(setBadgeText).toHaveBeenCalledWith({ text: "OK" });
+    expect(setBadgeText).toHaveBeenCalledWith({ text: "✓" });
 
     await vi.advanceTimersByTimeAsync(3000);
     expect(setBadgeText).toHaveBeenLastCalledWith({ text: "" });
@@ -120,7 +120,7 @@ describe("background entrypoint", () => {
     });
   });
 
-  it("content script との通信に失敗したら ERR を返す", async () => {
+  it("content script との通信に失敗したら失敗バッジを返す", async () => {
     if (runtimeMessageListener === undefined) {
       throw new Error("runtime message listener is not registered");
     }
@@ -140,6 +140,6 @@ describe("background entrypoint", () => {
       error: "Cannot establish connection. Receiving end does not exist.",
     });
     expect(setBadgeBackgroundColor).toHaveBeenCalledWith({ color: "#dc2626" });
-    expect(setBadgeText).toHaveBeenCalledWith({ text: "ERR" });
+    expect(setBadgeText).toHaveBeenCalledWith({ text: "✕" });
   });
 });
