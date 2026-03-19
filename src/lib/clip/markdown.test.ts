@@ -1,57 +1,32 @@
 import { describe, expect, it } from "vitest";
 
 import { renderMarkdown } from "./markdown";
-import type { ClipDocument } from "./types";
 
 describe("renderMarkdown の振る舞い", () => {
-  it("見出し、段落、リスト、リンク、画像を Markdown に変換する", () => {
-    const document: ClipDocument = {
-      metadata: {
-        title: "Markdown Web Clipper",
-        url: "https://example.com/posts/clipper",
-        clippedAt: "2026-03-19T00:00:00.000Z",
-      },
-      blocks: [
-        {
-          type: "heading",
-          level: 1,
-          children: [{ type: "text", text: "Markdown Web Clipper" }],
-        },
-        {
-          type: "paragraph",
-          children: [
-            { type: "text", text: "Read the " },
-            {
-              type: "link",
-              text: "documentation",
-              href: "https://example.com/docs",
-            },
-            { type: "text", text: " before you start." },
-          ],
-        },
-        {
-          type: "list",
-          ordered: false,
-          items: [
-            [{ type: "text", text: "Fast setup" }],
-            [{ type: "text", text: "Local-only processing" }],
-          ],
-        },
-        {
-          type: "image",
-          alt: "Architecture diagram",
-          src: "https://example.com/diagram.png",
-        },
-      ],
-    };
+  it("Turndown で HTML を Markdown に変換する", () => {
+    const contentHtml = `
+      <article>
+        <h1>Markdown Web Clipper</h1>
+        <p>Read the <a href="https://example.com/docs">documentation</a>.</p>
+        <ul>
+          <li>Fast setup</li>
+          <li>Local-only processing</li>
+        </ul>
+        <img src="https://example.com/diagram.png" alt="Architecture diagram">
+      </article>
+    `;
 
-    expect(renderMarkdown(document)).toBe(
+    expect(renderMarkdown(contentHtml)).toBe(
       [
         "# Markdown Web Clipper",
-        "Read the [documentation](https://example.com/docs) before you start.",
+        "Read the [documentation](https://example.com/docs).",
         "- Fast setup\n- Local-only processing",
         "![Architecture diagram](https://example.com/diagram.png)",
       ].join("\n\n")
     );
+  });
+
+  it("空の HTML では空文字を返す", () => {
+    expect(renderMarkdown("")).toBe("");
   });
 });

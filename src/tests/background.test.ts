@@ -27,7 +27,8 @@ describe("background entrypoint", () => {
           url: "https://example.com",
           clippedAt: "2026-03-19T00:00:00.000Z",
         },
-        blocks: [],
+        contentHtml: "<h1>Title</h1>",
+        textContent: "Title",
         markdown: "# Title",
       },
     };
