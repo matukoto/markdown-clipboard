@@ -6,7 +6,6 @@ import {
   type ClipResponse,
   isClipActiveTabRequest,
 } from "../lib/clip/messages";
-import { t } from "../lib/i18n";
 
 const BADGE_RESET_DELAY_MS = 3000;
 let badgeResetTimeoutId: ReturnType<typeof setTimeout> | undefined;
@@ -30,20 +29,6 @@ export default defineBackground(() => {
 
   browser.action.onClicked.addListener(() => {
     void clipActiveTab();
-  });
-
-  browser.runtime.onInstalled.addListener(() => {
-    browser.contextMenus.create({
-      id: "open-options",
-      title: t("openOptionsMenu", "Open settings"),
-      contexts: ["action"],
-    });
-  });
-
-  browser.contextMenus.onClicked.addListener((info) => {
-    if (info.menuItemId === "open-options") {
-      void browser.runtime.openOptionsPage();
-    }
   });
 });
 

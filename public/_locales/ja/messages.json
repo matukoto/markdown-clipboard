@@ -11,9 +11,6 @@
   "commandClipActiveTabDescription": {
     "message": "現在のページを Markdown としてコピー"
   },
-  "openOptionsMenu": {
-    "message": "設定を開く"
-  },
   "optionsEyebrow": {
     "message": "Markdown Web Clipper"
   },
