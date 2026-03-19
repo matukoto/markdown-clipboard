@@ -13,8 +13,8 @@ const clipResult: ClipResult = {
   markdown: "# Markdown Web Clipper\n\nSave the current page as Markdown.",
 };
 
-describe("renderClipOutput", () => {
-  it("prepends the source URL by default", () => {
+describe("renderClipOutput の振る舞い", () => {
+  it("デフォルトでは冒頭に元 URL を付与する", () => {
     expect(renderClipOutput(clipResult)).toBe(
       [
         "Source: https://example.com/posts/clipper",
@@ -23,7 +23,7 @@ describe("renderClipOutput", () => {
     );
   });
 
-  it("can include clipped time for note-oriented formats", () => {
+  it("ノート向けの出力ではクリップ日時も含められる", () => {
     expect(renderClipOutput(clipResult, { includeClippedAt: true })).toBe(
       [
         "Source: https://example.com/posts/clipper\nClipped at: 2026-03-19T00:00:00.000Z",

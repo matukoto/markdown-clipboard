@@ -9,8 +9,8 @@ const metadata: ClipMetadata = {
   clippedAt: "2026-03-19T00:00:00.000Z",
 };
 
-describe("extractClipDocument", () => {
-  it("extracts semantic blocks from the main article content", () => {
+describe("extractClipDocument の振る舞い", () => {
+  it("記事のメインコンテンツから意味的なブロックを抽出する", () => {
     document.body.innerHTML = `
       <header>Site header</header>
       <main>
@@ -68,7 +68,7 @@ describe("extractClipDocument", () => {
     });
   });
 
-  it("falls back to body text when semantic containers are unavailable", () => {
+  it("意味的なコンテナがない場合は body の本文へフォールバックする", () => {
     document.body.innerHTML = `
       <div>
         <p>Clip this content instead.</p>
