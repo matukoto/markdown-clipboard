@@ -1,7 +1,7 @@
 import { extractClipDocument } from "./extract";
 import { renderMarkdown } from "./markdown";
 import { normalizeText } from "./text";
-import type { ClipMetadata, ClipResult } from "./types";
+import type { ClipContentOptions, ClipMetadata, ClipResult } from "./types";
 
 interface CreateClipMetadataInput {
   title: string;
@@ -26,6 +26,7 @@ export function createClipMetadata({
 export function clipPage(
   document: Document,
   url: string,
+  options: ClipContentOptions,
   clippedAt?: string
 ): ClipResult {
   const metadata = createClipMetadata({
@@ -33,7 +34,7 @@ export function clipPage(
     url,
     clippedAt,
   });
-  const clipDocument = extractClipDocument(document, metadata);
+  const clipDocument = extractClipDocument(document, metadata, options);
 
   return {
     ...clipDocument,

@@ -6,10 +6,12 @@ import {
   isClipPageRequest,
 } from "../lib/clip/messages";
 import { renderClipOutput } from "../lib/clip/output";
+import { getClipContentOptions } from "../lib/clip/settings";
 
 async function handleClipPageRequest(): Promise<ClipResponse> {
   try {
-    const result = clipPage(document, window.location.href);
+    const options = await getClipContentOptions();
+    const result = clipPage(document, window.location.href, options);
 
     if (result.markdown === "") {
       throw new Error("No clip-friendly content was found on this page.");

@@ -1,6 +1,7 @@
 import { collapseWhitespace, normalizeText } from "./text";
 import type {
   ClipBlock,
+  ClipContentOptions,
   ClipDocument,
   ClipMetadata,
   InlineNode,
@@ -39,10 +40,18 @@ const BLOCK_TAGS = new Set([
 
 export function extractClipDocument(
   document: Document,
-  metadata: ClipMetadata
+  metadata: ClipMetadata,
+  options: ClipContentOptions = {
+    includeLinks: true,
+    includeImages: true,
+  }
 ): ClipDocument {
   const primaryRoot = selectRoot(document);
-  const primaryBlocks = extractBlocksFromRoot(primaryRoot, metadata.url);
+  const primaryBlocks = extractBlocksFromRoot(
+    primaryRoot,
+    metadata.url,
+    options
+  );
 
   if (primaryBlocks.length > 0) {
     return {
@@ -53,7 +62,7 @@ export function extractClipDocument(
 
   return {
     metadata,
-    blocks: extractBlocksFromRoot(document.body, metadata.url),
+    blocks: extractBlocksFromRoot(document.body, metadata.url, options),
   };
 }
 
@@ -78,7 +87,8 @@ function selectRoot(document: Document): HTMLElement {
 
 function extractBlocksFromRoot(
   root: HTMLElement,
-  baseUrl: string
+  baseUrl: string,
+  options: ClipContentOptions
 ): ClipBlock[] {
   const preparedRoot = root.cloneNode(true) as HTMLElement;
   preparedRoot.querySelectorAll(NOISE_SELECTOR).forEach((node) => {
@@ -86,11 +96,15 @@ function extractBlocksFromRoot(
   });
 
   return Array.from(preparedRoot.childNodes).flatMap((node) =>
-    extractBlocks(node, baseUrl)
+    extractBlocks(node, baseUrl, options)
   );
 }
 
-function extractBlocks(node: Node, baseUrl: string): ClipBlock[] {
+function extractBlocks(
+  node: Node,
+  baseUrl: string,
+  options: ClipContentOptions
+): ClipBlock[] {
   if (node.nodeType === Node.TEXT_NODE) {
     const text = normalizeText(node.textContent ?? "");
 
@@ -120,7 +134,7 @@ function extractBlocks(node: Node, baseUrl: string): ClipBlock[] {
     tagName === "h5" ||
     tagName === "h6"
   ) {
-    const children = extractInlineNodes(node, baseUrl);
+    const children = extractInlineNodes(node, baseUrl, options);
 
     if (children.length === 0) {
       return [];
@@ -136,7 +150,7 @@ function extractBlocks(node: Node, baseUrl: string): ClipBlock[] {
   }
 
   if (tagName === "p") {
-    const children = extractInlineNodes(node, baseUrl);
+    const children = extractInlineNodes(node, baseUrl, options);
 
     if (children.length === 0) {
       return [];
@@ -153,7 +167,7 @@ function extractBlocks(node: Node, baseUrl: string): ClipBlock[] {
   if (tagName === "ul" || tagName === "ol") {
     const items = Array.from(node.children)
       .filter((child) => child instanceof HTMLLIElement)
-      .map((item) => extractListItem(item, baseUrl))
+      .map((item) => extractListItem(item, baseUrl, options))
       .filter((item) => item.length > 0);
 
     if (items.length === 0) {
@@ -170,6 +184,10 @@ function extractBlocks(node: Node, baseUrl: string): ClipBlock[] {
   }
 
   if (tagName === "img") {
+    if (!options.includeImages) {
+      return [];
+    }
+
     const src = node.getAttribute("src");
 
     if (src === null || src === "") {
@@ -187,11 +205,11 @@ function extractBlocks(node: Node, baseUrl: string): ClipBlock[] {
 
   if (hasBlockChildren(node)) {
     return Array.from(node.childNodes).flatMap((child) =>
-      extractBlocks(child, baseUrl)
+      extractBlocks(child, baseUrl, options)
     );
   }
 
-  const children = extractInlineNodes(node, baseUrl);
+  const children = extractInlineNodes(node, baseUrl, options);
 
   if (children.length === 0) {
     return [];
@@ -211,16 +229,24 @@ function hasBlockChildren(element: HTMLElement): boolean {
   );
 }
 
-function extractListItem(item: HTMLLIElement, baseUrl: string): InlineNode[] {
+function extractListItem(
+  item: HTMLLIElement,
+  baseUrl: string,
+  options: ClipContentOptions
+): InlineNode[] {
   const clone = item.cloneNode(true) as HTMLLIElement;
   clone.querySelectorAll("ul, ol").forEach((node) => {
     node.remove();
   });
-  return extractInlineNodes(clone, baseUrl);
+  return extractInlineNodes(clone, baseUrl, options);
 }
 
-function extractInlineNodes(node: Node, baseUrl: string): InlineNode[] {
-  const collected = collectInlineNodes(node, baseUrl);
+function extractInlineNodes(
+  node: Node,
+  baseUrl: string,
+  options: ClipContentOptions
+): InlineNode[] {
+  const collected = collectInlineNodes(node, baseUrl, options);
   const merged: InlineNode[] = [];
 
   for (const entry of collected) {
@@ -260,7 +286,11 @@ function extractInlineNodes(node: Node, baseUrl: string): InlineNode[] {
   return merged.filter((entry) => entry.type !== "text" || entry.text !== "");
 }
 
-function collectInlineNodes(node: Node, baseUrl: string): InlineNode[] {
+function collectInlineNodes(
+  node: Node,
+  baseUrl: string,
+  options: ClipContentOptions
+): InlineNode[] {
   if (node.nodeType === Node.TEXT_NODE) {
     return [
       {
@@ -285,7 +315,13 @@ function collectInlineNodes(node: Node, baseUrl: string): InlineNode[] {
 
     if (href === null || href === "") {
       return Array.from(node.childNodes).flatMap((child) =>
-        collectInlineNodes(child, baseUrl)
+        collectInlineNodes(child, baseUrl, options)
+      );
+    }
+
+    if (!options.includeLinks) {
+      return Array.from(node.childNodes).flatMap((child) =>
+        collectInlineNodes(child, baseUrl, options)
       );
     }
 
@@ -299,6 +335,10 @@ function collectInlineNodes(node: Node, baseUrl: string): InlineNode[] {
   }
 
   if (tagName === "img") {
+    if (!options.includeImages) {
+      return [];
+    }
+
     const src = node.getAttribute("src");
 
     if (src === null || src === "") {
@@ -319,7 +359,7 @@ function collectInlineNodes(node: Node, baseUrl: string): InlineNode[] {
   }
 
   return Array.from(node.childNodes).flatMap((child) =>
-    collectInlineNodes(child, baseUrl)
+    collectInlineNodes(child, baseUrl, options)
   );
 }
 

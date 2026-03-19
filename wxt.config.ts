@@ -8,7 +8,7 @@ export default defineConfig({
     name: "Markdown Web Clipper",
     description:
       "Extract the main content of the current page, convert it to Markdown, and copy it to the clipboard.",
-    permissions: ["tabs"],
+    permissions: ["tabs", "storage"],
     action: {
       default_title: "Markdown Web Clipper",
     },
