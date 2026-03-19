@@ -47,9 +47,15 @@ describe("content entrypoint", () => {
           },
         },
       },
+      storage: {
+        local: {
+          get: async () => ({}),
+          set: async () => undefined,
+        },
+      },
     };
 
-    await import("./content");
+    await import("../entrypoints/content");
   });
 
   afterEach(() => {

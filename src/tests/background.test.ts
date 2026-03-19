@@ -8,10 +8,12 @@ import {
 
 type RuntimeMessageListener = (message: unknown) => unknown;
 type CommandListener = (command: string) => void;
+type ActionClickListener = () => void;
 
 describe("background entrypoint", () => {
   let runtimeMessageListener: RuntimeMessageListener | undefined;
   let commandListener: CommandListener | undefined;
+  let actionClickListener: ActionClickListener | undefined;
 
   const setBadgeBackgroundColor = vi.fn(async () => undefined);
   const setBadgeText = vi.fn(async () => undefined);
@@ -66,12 +68,17 @@ describe("background entrypoint", () => {
         sendMessage: tabsSendMessage,
       },
       action: {
+        onClicked: {
+          addListener: (listener: ActionClickListener) => {
+            actionClickListener = listener;
+          },
+        },
         setBadgeBackgroundColor,
         setBadgeText,
       },
     };
 
-    await import("./background");
+    await import("../entrypoints/background");
   });
 
   afterEach(() => {
@@ -109,6 +116,23 @@ describe("background entrypoint", () => {
     }
 
     commandListener(CLIP_ACTIVE_TAB_MESSAGE);
+    await vi.runAllTimersAsync();
+
+    expect(tabsQuery).toHaveBeenCalledWith({
+      active: true,
+      currentWindow: true,
+    });
+    expect(tabsSendMessage).toHaveBeenCalledWith(123, {
+      type: CLIP_PAGE_MESSAGE,
+    });
+  });
+
+  it("拡張機能アイコンのクリックでも同じ処理を呼び出す", async () => {
+    if (actionClickListener === undefined) {
+      throw new Error("action click listener is not registered");
+    }
+
+    actionClickListener();
     await vi.runAllTimersAsync();
 
     expect(tabsQuery).toHaveBeenCalledWith({

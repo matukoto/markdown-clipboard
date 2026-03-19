@@ -23,6 +23,10 @@ export default defineBackground(() => {
 
     void clipActiveTab();
   });
+
+  browser.action.onClicked.addListener(() => {
+    void clipActiveTab();
+  });
 });
 
 async function clipActiveTab(): Promise<ClipResponse> {
