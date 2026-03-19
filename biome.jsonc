@@ -1,0 +1,44 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.3.8/schema.json",
+  // VCS（バージョン管理システム）設定
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": false
+  },
+  // コードフォーマットの基本設定
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineEnding": "lf"
+  },
+  // HTMLフォーマット設定（Svelte対応）
+  "html": {
+    "experimentalFullSupportEnabled": true,
+    "formatter": {
+      "enabled": true,
+      "indentScriptAndStyle": true
+    }
+  },
+  // JavaScriptの言語設定
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double",
+      "semicolons": "always",
+      "trailingCommas": "es5"
+    }
+  },
+  // リンター設定
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      // 必須の追加ルールのみ
+      "correctness": {
+        "noUnusedVariables": "error",
+        "noUnusedImports": "warn"
+      }
+    }
+  }
+}
