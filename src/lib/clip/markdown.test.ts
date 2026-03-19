@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 import { renderMarkdown } from "./markdown";
 import type { ClipDocument } from "./types";
 
-describe("renderMarkdown", () => {
-  it("renders headings, paragraphs, lists, links, and images", () => {
+describe("renderMarkdown の振る舞い", () => {
+  it("見出し、段落、リスト、リンク、画像を Markdown に変換する", () => {
     const document: ClipDocument = {
       metadata: {
         title: "Markdown Web Clipper",

@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import { clipPage, createClipMetadata } from "./clip";
 
-describe("createClipMetadata", () => {
-  it("normalizes blank titles to a stable fallback", () => {
+describe("createClipMetadata の振る舞い", () => {
+  it("空のタイトルを安定したフォールバック値に正規化する", () => {
     expect(
       createClipMetadata({
         title: " \n ",
@@ -18,8 +18,8 @@ describe("createClipMetadata", () => {
   });
 });
 
-describe("clipPage", () => {
-  it("builds markdown from the current document", () => {
+describe("clipPage の振る舞い", () => {
+  it("現在の document から Markdown を組み立てる", () => {
     document.title = "Markdown Web Clipper";
     document.body.innerHTML = `
       <main>
