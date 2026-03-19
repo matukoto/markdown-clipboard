@@ -35,9 +35,22 @@ export default defineBackground(() => {
 async function clipActiveTab(): Promise<ClipResponse> {
   try {
     const tabId = await getActiveTabId();
-    const response = (await browser.tabs.sendMessage(tabId, {
-      type: CLIP_PAGE_MESSAGE,
-    })) as ClipResponse | undefined;
+    let response: ClipResponse | undefined;
+
+    try {
+      response = (await browser.tabs.sendMessage(tabId, {
+        type: CLIP_PAGE_MESSAGE,
+      })) as ClipResponse | undefined;
+    } catch {
+      // Content script is not injected yet. Inject it using activeTab + scripting permissions.
+      await browser.scripting.executeScript({
+        target: { tabId },
+        files: ["/content-scripts/content.js"],
+      });
+      response = (await browser.tabs.sendMessage(tabId, {
+        type: CLIP_PAGE_MESSAGE,
+      })) as ClipResponse | undefined;
+    }
 
     if (response?.success) {
       await setBadge("✓", "#16a34a");

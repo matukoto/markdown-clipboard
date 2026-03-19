@@ -32,7 +32,8 @@ async function handleClipPageRequest(): Promise<ClipResponse> {
 }
 
 export default defineContentScript({
-  matches: ["http://*/*", "https://*/*"],
+  matches: [],
+  registration: "runtime",
   main() {
     browser.runtime.onMessage.addListener(
       (message: unknown, _sender, sendResponse) => {

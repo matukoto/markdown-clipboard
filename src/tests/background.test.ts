@@ -74,6 +74,9 @@ describe("background entrypoint", () => {
         query: tabsQuery,
         sendMessage: tabsSendMessage,
       },
+      scripting: {
+        executeScript: vi.fn(async () => []),
+      },
       action: {
         onClicked: {
           addListener: (listener: ActionClickListener) => {
@@ -156,11 +159,13 @@ describe("background entrypoint", () => {
       throw new Error("runtime message listener is not registered");
     }
 
-    tabsSendMessage.mockImplementationOnce(async () => {
-      throw new Error(
-        "Cannot establish connection. Receiving end does not exist."
+    tabsSendMessage
+      .mockRejectedValueOnce(
+        new Error("Cannot establish connection. Receiving end does not exist.")
+      )
+      .mockRejectedValueOnce(
+        new Error("Cannot establish connection. Receiving end does not exist.")
       );
-    });
 
     const response = (await runtimeMessageListener({
       type: CLIP_ACTIVE_TAB_MESSAGE,
