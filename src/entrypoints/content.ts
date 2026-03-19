@@ -1,10 +1,6 @@
 import { clipPage } from "../lib/clip/clip";
 import { writeTextToClipboard } from "../lib/clip/clipboard";
-import {
-  CLIP_PAGE_MESSAGE,
-  type ClipResponse,
-  isClipPageRequest,
-} from "../lib/clip/messages";
+import { type ClipResponse, isClipPageRequest } from "../lib/clip/messages";
 import { renderClipOutput } from "../lib/clip/output";
 import { getClipContentOptions } from "../lib/clip/settings";
 
@@ -40,10 +36,6 @@ export default defineContentScript({
     browser.runtime.onMessage.addListener(
       (message: unknown, _sender, sendResponse) => {
         if (!isClipPageRequest(message)) {
-          return undefined;
-        }
-
-        if (message.type !== CLIP_PAGE_MESSAGE) {
           return undefined;
         }
 
