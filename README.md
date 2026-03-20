@@ -5,7 +5,7 @@ A browser extension that copies the current page to the clipboard as Markdown.
 ## Highlights
 
 - Converts the active tab into Markdown and copies it
-- Can be triggered from the toolbar icon, shortcut, or command
+- Can be triggered from the toolbar icon or keyboard shortcut (browser command)
 - Lets you toggle how links and images are handled
 - Shows success and failure state on the extension badge
 
