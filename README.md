@@ -1,100 +1,53 @@
-# Markdown Web Clipper
+# markdown-clipboard
 
-## システム要件
+A browser extension that copies the current page to the clipboard as Markdown.
 
-**1. 基本要件**
+## Highlights
 
-* **プラットフォーム:** Google Chrome 拡張機能
-* **主な目的:** 閲覧中のWebページ（求人情報やブログ記事など）をMarkdown形式に変換し、クリップボードへ保存する。
+- Converts the active tab into Markdown and copies it
+- Can be triggered from the toolbar icon or keyboard shortcut (browser command)
+- Lets you toggle how links and images are handled
+- Shows success and failure state on the extension badge
 
-**2. 機能要件**
+## Usage
 
-* **コンテンツ抽出機能:** 開いているタブのDOMから、ナビゲーションバー、フッター、広告などの不要な要素（ノイズ）を排除し、対象となるメインコンテンツのみを正確に抽出する。
-* **Markdown変換機能:** 抽出したHTML要素（見出し、段落、リスト、リンク、画像など）を、プレーンなMarkdown構文に変換する。
-* **クリップボード連携機能:** 変換されたMarkdownテキストを、拡張機能アイコンのクリック、またはキーボードショートカットをトリガーとして、システムのクリップボードに自動で書き込む。
-* **通知機能（オプション）:** コピーが成功したことをユーザーに視覚的（バッジなど）にフィードバックする。
+1. Install the extension
+2. Open the page you want to copy
+3. Click the toolbar icon or press `Cmd/Ctrl + Shift + Y`
+4. The converted content is copied to the clipboard
 
-**3. 非機能要件・技術的な考慮事項**
+The copied text starts with `Source: URL`.
 
-* **セキュリティと透明性:** サードパーティの不透明なAPIやトラッキングを一切排除し、完全にローカル（ブラウザ内）で処理を完結させる。
-* **保守性と拡張性:** 将来的に抽出ルールの微調整や、ノートアプリ向けにメタデータ（URLや取得日時のFrontmatterなど）を追加できるようにコードをモジュール化しておく。
+## Settings
 
-## 技術選定
+On the options page, you can toggle:
 
-* Web: Svelte
-* Chrome拡張： WXT
+- Keep links as Markdown links
+- Keep images as Markdown images
 
-### アーキテクチャと実装方針（現在の要望）
+If both are off, links and images are converted to plain body text as much as possible.
 
-**1. `entrypoints/background.ts`**
+## Development
 
-* **役割:** イベントの監視と処理のトリガー。
-* **処理:**
-  * 拡張機能のアイコンがクリックされたイベントを検知する。
-  * 登録したキーボードショートカット（例: `Cmd/Ctrl + Shift + Y`）の入力を検知する。
-  * 検知後、現在アクティブなタブに注入されている `content.ts` に対して「ページの抽出と変換を実行せよ」というメッセージを送信する。
+```bash
+pnpm install
+pnpm dev
+```
 
-**2. `entrypoints/content.ts`**
+## Scripts
 
-* **役割:** DOM解析、Markdown変換、クリップボード操作。
-* **処理:**
-  * `background.ts` からのメッセージをリッスンする。
-  * トリガーを受け取ると、現在のページのDOMツリーを `@mozilla/readability` に渡してノイズのないメインコンテンツ（HTML）を抽出する。
-  * 次に、そのHTMLを `turndown` に渡してMarkdownテキストに変換する。
-  * 最後に、Clipboard APIを使用して結果をクリップボードに書き込む。
+- `pnpm dev` - Start development mode
+- `pnpm dev:firefox` - Start Firefox development mode
+- `pnpm build` - Build the extension
+- `pnpm build:firefox` - Build for Firefox
+- `pnpm zip` - Create a distributable zip
+- `pnpm lint` - Run static checks
+- `pnpm check` - Run Svelte/TypeScript checks
+- `pnpm test` - Run tests
 
-**3. `entrypoints/options/` (Svelteコンポーネント群)**
+## Tech Stack
 
-* **役割:** オプション設定などのユーザーインターフェース。
-* **処理:**
-  * クリップ実行自体はツールバーアイコンのクリックまたはショートカットキーで行い、ここでは設定画面を提供する。
-  * 想定される設定項目:
-     * タイトルのリンク形式を変更する
-     * Frontmatter（URLや取得日時）を付与するかどうかのトグル
-
-## 現在の方針
-
-現在の実装では、以下の挙動・構成を採用しています。
-
-1. **アイコンクリックの挙動:**
-   * アイコンをクリックすると、現在のページをそのままクリップする。
-   * 設定画面はオプションページとして提供し、拡張機能の設定画面またはアクションのコンテキストメニューから開く。
-
-2. **抽出・変換ライブラリ:**
-   * `src/lib/clip/extract.ts` は `@mozilla/readability` を利用して本文抽出を行う。
-   * `src/lib/clip/markdown.ts` は `turndown` を利用して Markdown へ変換する。
-
-## 開発
-
-### init
-
-```sh
-npx wxt@latest init
-
-# 選択
-svelte
-pnpm
-```  
-
-### フォーマット
-
-biome を使う
-
-## 現在の対応範囲
-
-* 対応済み要素: 見出し（h1-h6）、段落、箇条書き（ul/ol）、リンク、画像
-* ノイズ除去: `nav`, `header`, `footer`, `aside`, 広告系クラス（`.ad` など）を抽出前に除外
-* 出力形式: 先頭に `Source: <URL>` を付けた Markdown をクリップボードへコピー
-* 実行トリガー: ツールバーアイコンのクリック、および `Cmd/Ctrl + Shift + Y` ショートカット
-* URL解決: リンク・画像の相対URLはページURL基準で絶対URLに変換
-
-## 既知の制約
-
-* テーブル、コードブロック、脚注などの高度な Markdown 要素は未対応
-* 入れ子リストはフラット化され、階層構造は保持されない
-* サイト固有レイアウトでは本文抽出が過不足になる場合がある（抽出ルールの追加で調整可能）
-* クリップボード権限やページ制約によりコピーに失敗する場合がある
-
-## 参考
-
-* [eetann/url-copy-helper: You can copy URL and Title in several formats.](https://github.com/eetann/url-copy-helper)
+- WXT + Svelte 5
+- TypeScript
+- Turndown / turndown-plugin-gfm
+- Mozilla Readability
